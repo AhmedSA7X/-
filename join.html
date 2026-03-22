@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>حروف أحمد - انضم للعبة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg-deep: #030311;
+            --bg-primary: #080818;
+            --bg-secondary: #0e0e24;
+            --bg-card: rgba(18, 18, 48, 0.65);
+            --bg-glass: rgba(20, 20, 50, 0.45);
+            --gold: #FFD700; --gold-dark: #C49B00; --gold-light: #FFF3B0;
+            --gold-glow: rgba(255, 215, 0, 0.25);
+            --green: #00E676; --green-light: #69F0AE; --green-dark: #00C853;
+            --green-glow: rgba(0, 230, 118, 0.3); --green-bg: rgba(0, 230, 118, 0.08);
+            --orange: #FF9100; --orange-light: #FFAB40; --orange-dark: #E65100;
+            --orange-glow: rgba(255, 145, 0, 0.3); --orange-bg: rgba(255, 145, 0, 0.08);
+            --wrong: #FF1744; --purple: #7C4DFF; --purple-light: #B388FF;
+            --text-primary: #F0F0FF; --text-secondary: #7878A8; --text-dim: #4A4A70;
+            --radius: 16px; --radius-lg: 24px; --radius-xl: 32px;
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh; min-height: 100dvh;
+            overflow-x: hidden;
+            direction: rtl;
+            -webkit-font-smoothing: antialiased;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- Screens ---- */
+        .screen { display: none; flex:1; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+        .screen.active { display: flex; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ---- JOIN SCREEN ---- */
+        .join-logo { text-align: center; margin-bottom: 1.5rem; }
+        .join-logo .hex {
+            width: 70px; height: 70px;
+            background: linear-gradient(145deg, var(--gold-light), var(--gold), var(--gold-dark));
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 900; color: var(--bg-deep);
+            margin-bottom: 0.5rem; box-shadow: 0 0 30px var(--gold-glow);
+        }
+        .join-logo h1 {
+            font-size: 1.8rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .join-logo p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem; }
+
+        .join-card {
+            background: var(--bg-glass); backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-xl); padding: 1.5rem;
+            width: 100%; max-width: 420px;
+        }
+
+        .join-card label {
+            display: block; font-size: 0.85rem; font-weight: 700;
+            color: var(--text-secondary); margin-bottom: 0.5rem;
+        }
+        .join-card input[type="text"] {
+            width: 100%; padding: 12px 16px; border-radius: 14px;
+            border: 1.5px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.3); color: var(--text-primary);
+            font-family: inherit; font-size: 1.1rem; font-weight: 700;
+            text-align: center; outline: none;
+            transition: all 0.3s; margin-bottom: 1rem;
+        }
+        .join-card input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.12); }
+
+        .team-select { display: flex; gap: 0.8rem; margin-bottom: 1.2rem; }
+        .team-btn {
+            flex: 1; padding: 14px; border-radius: 16px;
+            border: 2px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.2); color: var(--text-secondary);
+            font-family: inherit; font-size: 1rem; font-weight: 800;
+            cursor: pointer; transition: all 0.35s var(--ease-spring);
+            text-align: center;
+        }
+        .team-btn:hover { transform: translateY(-2px); }
+        .team-btn.green-sel { border-color: rgba(0,230,118,0.3); }
+        .team-btn.green-sel:hover { border-color: var(--green); background: var(--green-bg); color: var(--green-light); }
+        .team-btn.green-sel.selected {
+            border-color: var(--green); background: var(--green-bg); color: var(--green);
+            box-shadow: 0 0 25px var(--green-glow);
+        }
+        .team-btn.orange-sel { border-color: rgba(255,145,0,0.3); }
+        .team-btn.orange-sel:hover { border-color: var(--orange); background: var(--orange-bg); color: var(--orange-light); }
+        .team-btn.orange-sel.selected {
+            border-color: var(--orange); background: var(--orange-bg); color: var(--orange);
+            box-shadow: 0 0 25px var(--orange-glow);
+        }
+
+        .btn-join {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+            color: var(--bg-deep); border: none; border-radius: 50px;
+            font-family: inherit; font-size: 1.1rem; font-weight: 800;
+            cursor: pointer; transition: all 0.4s var(--ease-spring);
+            box-shadow: 0 4px 20px var(--gold-glow);
+        }
+        .btn-join:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 35px rgba(255,215,0,0.4); }
+        .btn-join:disabled { opacity: 0.4; pointer-events: none; }
+
+        .error-msg {
+            color: var(--wrong); font-size: 0.85rem; text-align: center;
+            margin-top: 0.8rem; min-height: 1.2rem; font-weight: 600;
+        }
+
+        /* ---- WAITING SCREEN ---- */
+        .waiting-content { text-align: center; width: 100%; max-width: 420px; }
+        .player-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 10px 20px; border-radius: 20px; font-size: 1.1rem; font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        .player-badge.green-badge { background: var(--green-bg); color: var(--green); border: 1.5px solid rgba(0,230,118,0.3); }
+        .player-badge.orange-badge { background: var(--orange-bg); color: var(--orange); border: 1.5px solid rgba(255,145,0,0.3); }
+
+        .waiting-text {
+            font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        .players-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 1rem; }
+        .player-chip {
+            padding: 6px 14px; border-radius: 14px; font-size: 0.8rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1); background: var(--bg-glass);
+        }
+        .player-chip.green-chip { color: var(--green-light); border-color: rgba(0,230,118,0.2); }
+        .player-chip.orange-chip { color: var(--orange-light); border-color: rgba(255,145,0,0.2); }
+
+        /* ---- BUZZER SCREEN ---- */
+        .buzzer-screen { padding: 0; }
+        .buzzer-header {
+            width: 100%; padding: 0.8rem 1.2rem;
+            background: var(--bg-glass); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .buzzer-team-badge {
+            padding: 5px 14px; border-radius: 14px; font-size: 0.8rem; font-weight: 800;
+        }
+        .buzzer-team-badge.g { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+        .buzzer-team-badge.o { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(255,145,0,0.3); }
+        .buzzer-player-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+
+        .buzzer-body {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 1.5rem;
+            width: 100%;
+        }
+
+        .buzzer-status {
+            font-size: 1rem; font-weight: 700; color: var(--text-secondary);
+            margin-bottom: 1rem; text-align: center; min-height: 2rem;
+            line-height: 1.6;
+        }
+
+        .buzzer-question-area {
+            display: none; width: 100%; max-width: 420px; text-align: center; margin-bottom: 1.5rem;
+        }
+        .buzzer-question-area.visible { display: block; animation: fadeIn 0.3s ease; }
+
+        .bq-letter {
+            width: 50px; height: 50px;
+            background: linear-gradient(145deg, var(--gold-light), var(--gold));
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 900; color: var(--bg-deep);
+            margin-bottom: 0.8rem;
+        }
+        .bq-category {
+            font-size: 0.75rem; color: var(--purple-light);
+            background: rgba(124,77,255,0.1); padding: 3px 12px;
+            border-radius: 20px; border: 1px solid rgba(124,77,255,0.2);
+            display: inline-block; margin-bottom: 0.8rem; font-weight: 600;
+        }
+        .bq-text {
+            font-size: 1.15rem; font-weight: 700; line-height: 1.8;
+            color: var(--text-primary); margin-bottom: 0.5rem;
+        }
+
+        .buzzer-timer {
+            font-size: 3rem; font-weight: 900; color: var(--wrong);
+            text-shadow: 0 0 15px rgba(255,23,68,0.5);
+            margin-bottom: 0.5rem; font-variant-numeric: tabular-nums;
+            display: none;
+        }
+        .buzzer-timer.visible { display: block; animation: timerPulse 1s infinite alternate; }
+        @keyframes timerPulse {
+            from { transform: scale(1); } to { transform: scale(1.08); text-shadow: 0 0 25px rgba(255,23,68,0.8); }
+        }
+
+        /* THE BIG BUZZER BUTTON */
+        .buzzer-btn-wrap { position: relative; margin: 1rem 0; }
+        .buzzer-btn {
+            width: 180px; height: 180px; border-radius: 50%;
+            border: none; cursor: pointer;
+            background: radial-gradient(circle at 35% 35%, #FF4444, #CC0000, #880000);
+            box-shadow: 0 8px 30px rgba(255,0,0,0.4), 0 0 60px rgba(255,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.3);
+            font-family: inherit; font-size: 1.4rem; font-weight: 900; color: #fff;
+            transition: all 0.15s ease;
+            display: flex; align-items: center; justify-content: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            position: relative; z-index: 1;
+        }
+        .buzzer-btn::before {
+            content: ''; position: absolute; inset: -8px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,0,0,0.15), transparent 70%);
+            animation: buzzerGlow 1.5s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+        @keyframes buzzerGlow {
+            from { transform: scale(1); opacity: 0.5; }
+            to { transform: scale(1.15); opacity: 1; }
+        }
+        .buzzer-btn:active { transform: scale(0.92); box-shadow: 0 4px 15px rgba(255,0,0,0.3), inset 0 4px 8px rgba(0,0,0,0.4); }
+        .buzzer-btn:disabled {
+            background: radial-gradient(circle at 35% 35%, #555, #333, #222);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: not-allowed;
+            color: #777;
+        }
+        .buzzer-btn:disabled::before { display: none; }
+
+        .buzzer-btn.buzzed {
+            background: radial-gradient(circle at 35% 35%, var(--green-light), var(--green), var(--green-dark));
+            box-shadow: 0 8px 30px var(--green-glow);
+        }
+
+        .buzz-result-msg {
+            font-size: 1rem; font-weight: 700; color: var(--gold);
+            margin-top: 1rem; text-align: center; min-height: 1.5rem;
+        }
+
+        /* ---- Phase indicators ---- */
+        .phase-banner {
+            display: none; width: 100%; max-width: 420px;
+            padding: 10px 16px; border-radius: 14px;
+            text-align: center; font-size: 0.9rem; font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .phase-banner.visible { display: block; animation: fadeIn 0.3s ease; }
+        .phase-banner.phase-wait {
+            background: rgba(255,215,0,0.08); color: var(--gold);
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        .phase-banner.phase-your-turn {
+            background: rgba(0,230,118,0.08); color: var(--green);
+            border: 1px solid rgba(0,230,118,0.3);
+        }
+        .phase-banner.phase-other-turn {
+            background: rgba(255,145,0,0.08); color: var(--orange);
+            border: 1px solid rgba(255,145,0,0.2);
+        }
+        .phase-banner.phase-free {
+            background: rgba(124,77,255,0.08); color: var(--purple-light);
+            border: 1px solid rgba(124,77,255,0.2);
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 400px) {
+            .buzzer-btn { width: 150px; height: 150px; font-size: 1.2rem; }
+            .join-logo h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ======== JOIN SCREEN ======== -->
+    <div id="join-screen" class="screen active">
+        <div class="join-logo">
+            <div class="hex">ح</div>
+            <h1>حروف أحمد</h1>
+            <p>انضم للمباراة!</p>
+        </div>
+        <div class="join-card">
+            <label>🔢 رقم الغرفة</label>
+            <input type="text" id="room-id" placeholder="أدخل رقم الغرفة (5 أرقام)" maxlength="5" autocomplete="off" style="letter-spacing: 5px; font-size: 1.5rem;">
+
+            <label>✏️ اسمك</label>
+            <input type="text" id="player-name" placeholder="اكتب اسمك هنا..." maxlength="20" autocomplete="off">
+
+            <label>🏷️ اختر فريقك</label>
+            <div class="team-select">
+                <button class="team-btn green-sel" data-team="green" onclick="selectTeam('green')">🟢 الأخضر</button>
+                <button class="team-btn orange-sel" data-team="orange" onclick="selectTeam('orange')">🟠 البرتقالي</button>
+            </div>
+
+            <button class="btn-join" id="btn-join" onclick="joinGame()">🚀 انضم!</button>
+            <div class="error-msg" id="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- ======== WAITING SCREEN ======== -->
+    <div id="waiting-screen" class="screen">
+        <div class="waiting-content">
+            <div class="player-badge" id="my-badge">🎮</div>
+            <p class="waiting-text">⏳ بانتظار بدء اللعبة...</p>
+            <p style="color: var(--text-dim); font-size: 0.85rem;">اللاعبين المنضمين:</p>
+            <div class="players-grid" id="waiting-players"></div>
+        </div>
+    </div>
+
+    <!-- ======== BUZZER SCREEN ======== -->
+    <div id="buzzer-screen" class="screen buzzer-screen">
+        <div class="buzzer-header">
+            <span class="buzzer-player-name" id="buzzer-my-name">اللاعب</span>
+            <span class="buzzer-team-badge" id="buzzer-my-team">الفريق</span>
+        </div>
+        <div class="buzzer-body">
+            <div class="buzzer-status" id="buzzer-status">🎮 بانتظار السؤال...</div>
+
+            <div class="phase-banner" id="phase-banner"></div>
+
+            <div class="buzzer-question-area" id="buzzer-q-area">
+                <div class="bq-letter" id="bq-letter">ا</div><br>
+                <span class="bq-category" id="bq-category">ثقافة</span>
+                <p class="bq-text" id="bq-text">السؤال هنا...</p>
+            </div>
+
+            <div class="buzzer-timer" id="buzzer-timer">5</div>
+
+            <div class="buzzer-btn-wrap">
+                <button class="buzzer-btn" id="buzzer-btn" disabled onclick="pressBuzzer()">
+                    🔔<br>اضغط!
+                </button>
+            </div>
+
+            <div class="buzz-result-msg" id="buzz-result"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="sounds.js"></script>
+    <script>
+        // ============================================================
+        //  JOIN PAGE CLIENT
+        // ============================================================
+        const socket = io();
+        let myData = null;
+        let selectedTeam = null;
+        let buzzerTimerInterval = null;
+        let typewriterTimeout = null;
+        let currentFullQuestion = '';  // store full question text for typewriter
+
+        // DOM
+        const joinScreen = document.getElementById('join-screen');
+        const waitingScreen = document.getElementById('waiting-screen');
+        const buzzerScreen = document.getElementById('buzzer-screen');
+        const errorMsg = document.getElementById('error-msg');
+        const playerNameInput = document.getElementById('player-name');
+        const waitingPlayers = document.getElementById('waiting-players');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const roomParam = params.get('room');
+            if (roomParam) {
+                const roomInput = document.getElementById('room-id');
+                if (roomInput) roomInput.value = roomParam;
+            }
+        });
+
+        const buzzerBtn = document.getElementById('buzzer-btn');
+        const buzzerStatus = document.getElementById('buzzer-status');
+        const buzzerQArea = document.getElementById('buzzer-q-area');
+        const bqLetter = document.getElementById('bq-letter');
+        const bqCategory = document.getElementById('bq-category');
+        const bqText = document.getElementById('bq-text');
+        const buzzerTimer = document.getElementById('buzzer-timer');
+        const buzzResult = document.getElementById('buzz-result');
+        const phaseBanner = document.getElementById('phase-banner');
+
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+        }
+
+        // ---- Team Selection ----
+        function selectTeam(team) {
+            selectedTeam = team;
+            document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelector(`.team-btn[data-team="${team}"]`).classList.add('selected');
+        }
+
+        // ---- Join ----
+        function joinGame() {
+            const roomId = document.getElementById('room-id').value.trim();
+            const name = playerNameInput.value.trim();
+            if (!roomId) { errorMsg.textContent = 'أدخل رقم الغرفة!'; return; }
+            if (!name) { errorMsg.textContent = 'اكتب اسمك!'; return; }
+            if (!selectedTeam) { errorMsg.textContent = 'اختر فريقك!'; return; }
+            errorMsg.textContent = '';
+
+            socket.emit('player-join', { name, team: selectedTeam, roomId });
+            try { SFX.init(); } catch(e) {}
+        }
+
+        socket.on('join-success', (data) => {
+            myData = data;
+            const badge = document.getElementById('my-badge');
+            badge.textContent = `${data.team === 'green' ? '🟢' : '🟠'} ${data.name}`;
+            badge.className = `player-badge ${data.team === 'green' ? 'green-badge' : 'orange-badge'}`;
+
+            document.getElementById('buzzer-my-name').textContent = data.name;
+            const teamBadge = document.getElementById('buzzer-my-team');
+            teamBadge.textContent = data.team === 'green' ? '🟢 الأخضر' : '🟠 البرتقالي';
+            teamBadge.className = `buzzer-team-badge ${data.team === 'green' ? 'g' : 'o'}`;
+
+            showScreen(waitingScreen);
+        });
+
+        socket.on('join-error', (msg) => {
+            errorMsg.textContent = msg;
+        });
+
+        // ---- Player List ----
+        socket.on('player-list', (players) => {
+            waitingPlayers.innerHTML = '';
+            players.forEach(p => {
+                const chip = document.createElement('div');
+                chip.className = `player-chip ${p.team === 'green' ? 'green-chip' : 'orange-chip'}`;
+                chip.textContent = `${p.team === 'green' ? '🟢' : '🟠'} ${p.name}`;
+                waitingPlayers.appendChild(chip);
+            });
+        });
+
+        // ---- Game Started ----
+        socket.on('game-started', () => {
+            showScreen(buzzerScreen);
+            buzzerStatus.textContent = '🎮 اللعبة بدأت! بانتظار السؤال...';
+            buzzerBtn.disabled = true;
+        });
+
+        // ---- Question Shown ----
+        socket.on('question-show', (data) => {
+            clearTimeout(typewriterTimeout);
+            currentFullQuestion = data.question;
+            
+            buzzerQArea.classList.add('visible');
+            bqLetter.textContent = data.letter;
+            bqCategory.textContent = data.category;
+            
+            // Typewriter effect
+            const speed = data.twSpeed || 20;
+            if (speed > 0) {
+                bqText.textContent = '';
+                let i = 0;
+                function typeWriter() {
+                    if (i < data.question.length) {
+                        bqText.textContent += data.question.charAt(i);
+                        i++;
+                        typewriterTimeout = setTimeout(typeWriter, speed);
+                    }
+                }
+                typeWriter();
+            } else {
+                bqText.textContent = data.question;
+            }
+
+            buzzerBtn.disabled = false;
+            buzzerBtn.classList.remove('buzzed');
+            buzzerBtn.innerHTML = '🔔<br>اضغط!';
+            buzzResult.textContent = '';
+            buzzerTimer.classList.remove('visible');
+
+            phaseBanner.classList.add('visible');
+            phaseBanner.className = 'phase-banner visible phase-wait';
+            phaseBanner.textContent = '⚡ كن أول من يضغط!';
+
+            buzzerStatus.textContent = '❓ سؤال جديد! اضغط الزر بسرعة!';
+        });
+
+        // ---- Buzzer Press ----
+        function pressBuzzer() {
+            if (buzzerBtn.disabled) return;
+            try { SFX.buzzer(); } catch(e) {}
+            socket.emit('buzzer-press');
+            buzzerBtn.disabled = true;
+            buzzerBtn.classList.add('buzzed');
+            buzzerBtn.innerHTML = '✅<br>ضغطت!';
+        }
+
+        // ---- Buzzer Result ----
+        socket.on('buzzer-result', (data) => {
+            clearInterval(buzzerTimerInterval);
+            clearTimeout(typewriterTimeout); // stop typewriter, keep partial text
+            buzzerBtn.disabled = true;
+
+            if (data.playerName === myData?.name && data.playerTeam === myData?.team) {
+                buzzResult.textContent = `🎉 أنت ضغطت أولاً! لديك ${data.timeLimit} ثوانٍ للإجابة!`;
+                buzzResult.style.color = 'var(--green)';
+            } else {
+                buzzResult.textContent = `🔔 ${data.playerName} ضغط أولاً!`;
+                buzzResult.style.color = 'var(--gold)';
+            }
+
+            phaseBanner.className = 'phase-banner visible phase-your-turn';
+            if (data.phase === 1) {
+                phaseBanner.textContent = `🔔 ${data.playerName} يجيب الآن (${data.timeLimit} ثوانٍ)`;
+            } else if (data.phase === 3) {
+                phaseBanner.textContent = `⚡ ${data.playerName} يجيب (${data.timeLimit} ثوانٍ)`;
+            }
+
+            // Timer
+            startBuzzerTimer(data.timeLimit);
+        });
+
+        // ---- Phase Change ----
+        socket.on('phase-change', (data) => {
+            clearInterval(buzzerTimerInterval);
+            clearTimeout(typewriterTimeout);
+            bqText.textContent = currentFullQuestion; // ensure full question shown
+            buzzResult.textContent = '';
+
+            if (data.phase === 2) {
+                if (myData?.team === data.team) {
+                    // my team's turn
+                    buzzerBtn.disabled = false;
+                    buzzerBtn.classList.remove('buzzed');
+                    buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                    phaseBanner.className = 'phase-banner visible phase-your-turn';
+                    phaseBanner.textContent = `✨ دور فريقك! لديكم ${data.timeLimit} ثوانٍ!`;
+                    buzzerStatus.textContent = '⏰ الفرصة لفريقك! اضغط بسرعة!';
+                } else {
+                    buzzerBtn.disabled = true;
+                    phaseBanner.className = 'phase-banner visible phase-other-turn';
+                    phaseBanner.textContent = `⏳ الفرصة للفريق الآخر (${data.timeLimit} ثوانٍ)`;
+                    buzzerStatus.textContent = '⏳ بانتظار الفريق الآخر...';
+                }
+                startBuzzerTimer(data.timeLimit);
+            } else if (data.phase === 3) {
+                buzzerBtn.disabled = false;
+                buzzerBtn.classList.remove('buzzed');
+                buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                phaseBanner.className = 'phase-banner visible phase-free';
+                phaseBanner.textContent = `⚡ أي أحد يضغط! ${data.timeLimit} ثوانٍ فقط!`;
+                buzzerStatus.textContent = '🔥 المرحلة الأخيرة! من يضغط أولاً!';
+            }
+        });
+
+        // ---- Question Closed ----
+        socket.on('question-closed', () => {
+            clearInterval(buzzerTimerInterval);
+            clearTimeout(typewriterTimeout);
+            buzzerQArea.classList.remove('visible');
+            buzzerBtn.disabled = true;
+            buzzerBtn.classList.remove('buzzed');
+            buzzerBtn.innerHTML = '🔔<br>اضغط!';
+            buzzerTimer.classList.remove('visible');
+            phaseBanner.classList.remove('visible');
+            buzzResult.textContent = '';
+            buzzerStatus.textContent = '🎮 بانتظار السؤال التالي...';
+        });
+
+        // ---- Cell Update ----
+        socket.on('cell-update', (data) => {
+            // visual feedback could be added here
+        });
+
+        // ---- Round / Match Results ----
+        socket.on('round-result', (data) => {
+            buzzerStatus.innerHTML = `🏁 انتهت الجولة! فاز: <strong>${data.winnerName}</strong>`;
+            buzzerQArea.classList.remove('visible');
+            buzzerBtn.disabled = true;
+            phaseBanner.classList.remove('visible');
+        });
+
+        socket.on('match-result', (data) => {
+            buzzerStatus.innerHTML = `🏆 انتهت المباراة! البطل: <strong>${data.winnerName}</strong>`;
+            buzzerQArea.classList.remove('visible');
+            buzzerBtn.disabled = true;
+            phaseBanner.classList.remove('visible');
+        });
+
+        // ---- Game Reset ----
+        socket.on('game-reset', () => {
+            showScreen(waitingScreen);
+            buzzerStatus.textContent = '🎮 بانتظار السؤال...';
+        });
+
+        // ---- Timer Helper ----
+        function startBuzzerTimer(seconds) {
+            clearInterval(buzzerTimerInterval);
+            buzzerTimer.classList.add('visible');
+            buzzerTimer.textContent = seconds;
+            let left = seconds;
+            buzzerTimerInterval = setInterval(() => {
+                left--;
+                buzzerTimer.textContent = left;
+                if (left <= 0) {
+                    clearInterval(buzzerTimerInterval);
+                    buzzerTimer.classList.remove('visible');
+                }
+            }, 1000);
+        }
+
+        // ---- Enter key to join ----
+        playerNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') joinGame();
+        });
+    </script>
+</body>
+</html>

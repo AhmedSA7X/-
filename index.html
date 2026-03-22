@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حروف أحمد</title>
+    <meta name="description" content="لعبة حروف أحمد - فريقين يتنافسون على لوحة سداسية">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+
+        <!-- ============ SETUP SCREEN ============ -->
+        <div id="setup-screen" class="screen active">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content">
+                <div class="logo-area">
+                    <div class="logo-hex">ح</div>
+                    <h1 class="game-title">حروف أحمد</h1>
+                    <p class="game-subtitle">تحدي الفريقين</p>
+                </div>
+
+                <div class="teams-setup">
+                    <div class="team-input-card green-card">
+                        <div class="team-color-dot green-dot"></div>
+                        <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
+                        <input type="text" id="green-name-input" placeholder="اسم الفريق..." maxlength="20">
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="team-input-card orange-card">
+                        <div class="team-color-dot orange-dot"></div>
+                        <label>الفريق البرتقالي <span class="dir-label">↕ عمودي</span></label>
+                        <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
+                    </div>
+                </div>
+
+                <!-- Typewriter Speed Settings -->
+                <div class="mp-section" style="margin-top: 1rem; padding: 1rem;">
+                    <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.6rem; font-weight: 700;">⚙️ سرعة ظهور السؤال للمنضمين</h3>
+                    <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center;">
+                        <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
+                        <span class="tw-speed-chip selected" data-val="20" onclick="selectTwSpeed(this)">🏃 سريع</span>
+                        <span class="tw-speed-chip" data-val="50" onclick="selectTwSpeed(this)">🚶 متوسط</span>
+                        <span class="tw-speed-chip" data-val="100" onclick="selectTwSpeed(this)">🐢 بطيء</span>
+                        <span class="tw-speed-chip" data-val="0" onclick="selectTwSpeed(this)">💨 مباشر</span>
+                    </div>
+                    <input type="hidden" id="typewriter-speed" value="20">
+                </div>
+                <script>
+                function selectTwSpeed(el) {
+                    document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
+                    el.classList.add('selected');
+                    document.getElementById('typewriter-speed').value = el.dataset.val;
+                }
+                </script>
+
+                <!-- Multiplayer Room Code -->
+                <div class="mp-section" id="mp-section">
+                    <div class="mp-link-box">
+                        <h3>🌐 غرفة اللاعبين</h3>
+                        <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
+                        <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
+                            <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
+                            <button class="btn-secondary" id="btn-join-page" onclick="window.location.href='join.html'" style="width: auto; padding: 10px 20px; margin: 0; background: rgba(255,255,255,0.15); border: none; border-radius: 12px; color: white; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold;">🔗 الانضمام الى الغرفة</button>
+                        </div>
+                        <button class="btn-copy" id="btn-copy-link" onclick="copyJoinLink()" style="display: none; margin-top: 5px;">📋 نسخ الرابط (إختياري)</button>
+                        <p class="mp-count" id="mp-count" style="margin-top: 10px;">اللاعبين: 0/8</p>
+                    </div>
+                    <div class="mp-players-area">
+                        <div class="mp-team-col">
+                            <h4 style="color: var(--green-light);">🟢 الأخضر</h4>
+                            <div id="mp-green-players" class="mp-player-list"></div>
+                        </div>
+                        <div class="mp-team-col">
+                            <h4 style="color: var(--orange-light);">🟠 البرتقالي</h4>
+                            <div id="mp-orange-players" class="mp-player-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rules-box">
+                    <h2>📜 القواعد</h2>
+                    <ul>
+                        <li>🟢 الأخضر يصل <strong>يمين ← يسار</strong></li>
+                        <li>🟠 البرتقالي يصل <strong>أعلى ← أسفل</strong></li>
+                        <li>❓ أجب صح لتحتل الخلية بلونك</li>
+                        <li>🏆 أول فريق يوصل الطرفين يفوز!</li>
+                        <li>📞 لكل فريق <strong>فزعة</strong> واحدة</li>
+                    </ul>
+                </div>
+                <button id="start-btn" class="btn-primary">🎮 ابدأ المباراة</button>
+            </div>
+        </div>
+
+        <!-- ============ GAME SCREEN ============ -->
+        <div id="game-screen" class="screen">
+            <header class="game-header">
+                <div class="team-panel green-panel" id="green-panel">
+                    <span class="team-name" id="green-team-name">الأخضر</span>
+                    <span class="team-dir">↔</span>
+                    <span class="team-score match-score-green" id="green-score" title="عدد الجولات الفائزة">0</span>
+                    <button class="btn-fazaa-sm" id="green-fazaa-btn">📞 فزعة</button>
+                </div>
+                <div class="center-header">
+                    <div class="round-badge" id="round-badge">الجولة الأولى</div>
+                    <div class="turn-indicator">
+                        <div class="turn-dot" id="turn-dot"></div>
+                        <span id="turn-label">دور الفريق...</span>
+                    </div>
+                </div>
+                <div class="team-panel orange-panel" id="orange-panel">
+                    <span class="team-score match-score-orange" id="orange-score" title="عدد الجولات الفائزة">0</span>
+                    <span class="team-name" id="orange-team-name">البرتقالي</span>
+                    <span class="team-dir">↕</span>
+                    <button class="btn-fazaa-sm" id="orange-fazaa-btn">📞 فزعة</button>
+                </div>
+            </header>
+
+            <main class="game-board">
+                <div class="board-wrapper">
+                    <!-- Edge indicators -->
+                    <div class="edge-indicator edge-right green-edge"></div>
+                    <div class="edge-indicator edge-left green-edge"></div>
+                    <div class="edge-indicator edge-top orange-edge"></div>
+                    <div class="edge-indicator edge-bottom orange-edge"></div>
+                    <div id="hex-grid" class="hex-grid"></div>
+                </div>
+            </main>
+
+            <div class="host-area">
+                <div class="host-avatar">🎙️</div>
+                <div id="host-bubble" class="host-bubble">
+                    <p id="host-text">يا هلا والله! يلا نبدأ! 🔥</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ QUESTION MODAL ============ -->
+        <div id="question-modal" class="modal-overlay">
+            <div class="modal-content question-modal-content">
+                <div class="modal-header">
+                    <span class="modal-letter-badge" id="modal-letter">ق</span>
+                    <span class="modal-category" id="modal-category"></span>
+                    <span class="modal-team-badge" id="modal-team-badge">الفريق</span>
+                </div>
+                <!-- Buzzer Info -->
+                <div class="buzzer-info" id="buzzer-info" style="display:none;">
+                    <div class="buzzer-info-badge" id="buzzer-info-badge">🔔 بانتظار الضغط...</div>
+                </div>
+                <div class="question-timer" id="question-timer">15</div>
+                <p class="question-text" id="question-text">السؤال هنا...</p>
+                <div id="answer-reveal-area" class="answer-reveal-area">
+                    <button id="show-answer-btn" class="btn-primary" style="margin-top: 1rem;">👀 اظهر الإجابة</button>
+                    <div id="answer-content" class="answer-content">
+                        <h3 class="correct-answer-text">الإجابة: <span id="actual-answer" class="highlight-text"></span></h3>
+                        <div class="judge-buttons">
+                            <button id="btn-award-green" class="btn-judge btn-award-green">🟢 للأخضر</button>
+                            <button id="btn-award-orange" class="btn-judge btn-award-orange">🟠 للبرتقالي</button>
+                            <button id="btn-change-q" class="btn-judge btn-change-q">🔄 تغيير السؤال</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ FAZAA MODAL ============ -->
+        <div id="fazaa-modal" class="modal-overlay">
+            <div class="modal-content fazaa-modal-content">
+                <h2>📞 فزعة</h2>
+                <p>اختر مجال السؤال:</p>
+                <div class="fazaa-categories">
+                    <button class="btn-cat" data-cat="تاريخ">🏛️ تاريخ</button>
+                    <button class="btn-cat" data-cat="جغرافيا">🌍 جغرافيا</button>
+                    <button class="btn-cat" data-cat="علوم">🔬 علوم</button>
+                    <button class="btn-cat" data-cat="رياضة">⚽ رياضة</button>
+                    <button class="btn-cat" data-cat="ثقافة">📚 ثقافة</button>
+                    <button class="btn-cat" data-cat="طب">🩺 طب</button>
+                    <button class="btn-cat" data-cat="انمي">🎌 أنمي</button>
+                    <button class="btn-cat" data-cat="كرة قدم">⚽ كرة قدم</button>
+                    <button class="btn-cat" data-cat="دين">🕌 دين</button>
+                    <button class="btn-cat" data-cat="العاب">🎮 ألعاب</button>
+                    <button class="btn-cat" data-cat="افلام">🎬 أفلام</button>
+                    <button class="btn-cat" data-cat="شركات">🏢 شركات</button>
+                </div>
+                <button id="cancel-fazaa-btn" class="btn-secondary">إلغاء</button>
+            </div>
+        </div>
+
+        <!-- ============ ROUND RESULT MODAL ============ -->
+        <div id="round-result-modal" class="modal-overlay">
+            <div class="modal-content fazaa-modal-content">
+                <div class="result-icon" style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: trophyBounce 2s var(--ease-spring) infinite;">✨</div>
+                <h2 id="round-result-title" style="font-size: 1.8rem; color: var(--gold); margin-bottom: 0.5rem;">نهاية الجولة الأولى</h2>
+                <p id="round-result-text" style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.1rem;">فاز الفريق بهذه الجولة!</p>
+                <div class="match-score-display" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 900;">
+                    <span id="round-green-score" style="color: var(--green);">0</span>
+                    <span style="color: var(--text-dim);">-</span>
+                    <span id="round-orange-score" style="color: var(--orange);">0</span>
+                </div>
+                <button id="next-round-btn" class="btn-primary">▶️ ابدأ الجولة التالية</button>
+            </div>
+        </div>
+
+        <!-- ============ RESULT SCREEN ============ -->
+        <div id="result-screen" class="screen">
+            <div class="result-content">
+                <div id="result-icon" class="result-icon">🏆</div>
+                <h1 id="result-title">مبروك!</h1>
+                <p id="result-text">فاز الفريق!</p>
+                <button id="restart-btn" class="btn-primary">🔄 العب مرة ثانية</button>
+            </div>
+        </div>
+
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="sounds.js"></script>
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
