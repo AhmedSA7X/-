@@ -235,6 +235,42 @@ body {
 .rules-box li:hover { color: var(--text-primary); }
 .rules-box li strong { color: var(--text-primary); }
 
+/* Tabs UI */
+.tabs-container {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+.tabs-header {
+    display: flex; background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.tab-btn {
+    flex: 1; padding: 14px 10px; border: none; background: transparent;
+    color: var(--text-secondary); font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+.tab-btn.active {
+    color: var(--gold);
+    border-bottom: 2px solid var(--gold);
+    background: rgba(255,215,0,0.05);
+}
+.tab-content {
+    display: none; padding: 1.5rem;
+    animation: fadeInTab 0.4s var(--ease-smooth);
+}
+.tab-content.active { display: block; }
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 
 /* ============================================================
    BUTTONS

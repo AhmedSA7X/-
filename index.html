@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>حروف أحمد</title>
     <meta name="description" content="لعبة حروف أحمد - فريقين يتنافسون على لوحة سداسية">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,74 +23,97 @@
                     <p class="game-subtitle">تحدي الفريقين</p>
                 </div>
 
-                <div class="teams-setup">
-                    <div class="team-input-card green-card">
-                        <div class="team-color-dot green-dot"></div>
-                        <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
-                        <input type="text" id="green-name-input" placeholder="اسم الفريق..." maxlength="20">
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" onclick="openTab('tab-room')">غرفة اللاعبين</button>
+                        <button class="tab-btn" onclick="openTab('tab-rules')">القواعد</button>
+                        <button class="tab-btn" onclick="openTab('tab-settings')">الاعدادات</button>
                     </div>
-                    <div class="vs-badge">VS</div>
-                    <div class="team-input-card orange-card">
-                        <div class="team-color-dot orange-dot"></div>
-                        <label>الفريق البرتقالي <span class="dir-label">↕ عمودي</span></label>
-                        <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
+
+                    <div class="tab-content active" id="tab-room">
+                        <div class="teams-setup">
+                            <div class="team-input-card green-card">
+                                <div class="team-color-dot green-dot"></div>
+                                <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
+                                <input type="text" id="green-name-input" placeholder="اسم الفريق..." maxlength="20">
+                            </div>
+                            <div class="vs-badge">VS</div>
+                            <div class="team-input-card orange-card">
+                                <div class="team-color-dot orange-dot"></div>
+                                <label>الفريق البرتقالي <span class="dir-label">↕ عمودي</span></label>
+                                <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
+                            </div>
+                        </div>
+
+                        <!-- Multiplayer Room Code -->
+                        <div class="mp-section" id="mp-section" style="margin-top: 1rem;">
+                            <div class="mp-link-box">
+                                <h3>🌐 غرفة اللاعبين</h3>
+                                <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
+                                <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
+                                    <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
+                                    <button class="btn-secondary" id="btn-join-page" onclick="window.location.href='join.html'" style="width: auto; padding: 10px 20px; margin: 0; background: rgba(255,255,255,0.15); border: none; border-radius: 12px; color: white; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold;">🔗 الانضمام الى الغرفة</button>
+                                </div>
+                                <button class="btn-copy" id="btn-copy-link" onclick="copyJoinLink()" style="display: none; margin-top: 5px;">📋 نسخ الرابط (إختياري)</button>
+                                <p class="mp-count" id="mp-count" style="margin-top: 10px;">اللاعبين: 0/8</p>
+                            </div>
+                            <div class="mp-players-area">
+                                <div class="mp-team-col">
+                                    <h4 style="color: var(--green-light);">🟢 الأخضر</h4>
+                                    <div id="mp-green-players" class="mp-player-list"></div>
+                                </div>
+                                <div class="mp-team-col">
+                                    <h4 style="color: var(--orange-light);">🟠 البرتقالي</h4>
+                                    <div id="mp-orange-players" class="mp-player-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-rules">
+                        <div class="rules-box" style="margin-top: 1rem;">
+                            <h2>📜 القواعد</h2>
+                            <ul>
+                                <li>🟢 الأخضر يصل <strong>يمين ← يسار</strong></li>
+                                <li>🟠 البرتقالي يصل <strong>أعلى ← أسفل</strong></li>
+                                <li>❓ أجب صح لتحتل الخلية بلونك</li>
+                                <li>🏆 أول فريق يوصل الطرفين يفوز!</li>
+                                <li>📞 لكل فريق <strong>فزعة</strong> واحدة</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-settings">
+                        <!-- Typewriter Speed Settings -->
+                        <div class="mp-section" style="margin-top: 1rem; padding: 1rem;">
+                            <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.6rem; font-weight: 700;">⚙️ سرعة ظهور السؤال للمنضمين</h3>
+                            <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center;">
+                                <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
+                                <span class="tw-speed-chip selected" data-val="20" onclick="selectTwSpeed(this)">🏃 سريع</span>
+                                <span class="tw-speed-chip" data-val="50" onclick="selectTwSpeed(this)">🚶 متوسط</span>
+                                <span class="tw-speed-chip" data-val="100" onclick="selectTwSpeed(this)">🐢 بطيء</span>
+                                <span class="tw-speed-chip" data-val="0" onclick="selectTwSpeed(this)">💨 مباشر</span>
+                            </div>
+                            <input type="hidden" id="typewriter-speed" value="20">
+                        </div>
+                        <script>
+                        function selectTwSpeed(el) {
+                            document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
+                            el.classList.add('selected');
+                            document.getElementById('typewriter-speed').value = el.dataset.val;
+                        }
+                        </script>
                     </div>
                 </div>
 
-                <!-- Typewriter Speed Settings -->
-                <div class="mp-section" style="margin-top: 1rem; padding: 1rem;">
-                    <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.6rem; font-weight: 700;">⚙️ سرعة ظهور السؤال للمنضمين</h3>
-                    <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center;">
-                        <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
-                        <span class="tw-speed-chip selected" data-val="20" onclick="selectTwSpeed(this)">🏃 سريع</span>
-                        <span class="tw-speed-chip" data-val="50" onclick="selectTwSpeed(this)">🚶 متوسط</span>
-                        <span class="tw-speed-chip" data-val="100" onclick="selectTwSpeed(this)">🐢 بطيء</span>
-                        <span class="tw-speed-chip" data-val="0" onclick="selectTwSpeed(this)">💨 مباشر</span>
-                    </div>
-                    <input type="hidden" id="typewriter-speed" value="20">
-                </div>
                 <script>
-                function selectTwSpeed(el) {
-                    document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
-                    el.classList.add('selected');
-                    document.getElementById('typewriter-speed').value = el.dataset.val;
+                function openTab(tabId) {
+                    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    event.target.classList.add('active');
                 }
                 </script>
-
-                <!-- Multiplayer Room Code -->
-                <div class="mp-section" id="mp-section">
-                    <div class="mp-link-box">
-                        <h3>🌐 غرفة اللاعبين</h3>
-                        <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
-                        <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
-                            <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
-                            <button class="btn-secondary" id="btn-join-page" onclick="window.location.href='join.html'" style="width: auto; padding: 10px 20px; margin: 0; background: rgba(255,255,255,0.15); border: none; border-radius: 12px; color: white; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold;">🔗 الانضمام الى الغرفة</button>
-                        </div>
-                        <button class="btn-copy" id="btn-copy-link" onclick="copyJoinLink()" style="display: none; margin-top: 5px;">📋 نسخ الرابط (إختياري)</button>
-                        <p class="mp-count" id="mp-count" style="margin-top: 10px;">اللاعبين: 0/8</p>
-                    </div>
-                    <div class="mp-players-area">
-                        <div class="mp-team-col">
-                            <h4 style="color: var(--green-light);">🟢 الأخضر</h4>
-                            <div id="mp-green-players" class="mp-player-list"></div>
-                        </div>
-                        <div class="mp-team-col">
-                            <h4 style="color: var(--orange-light);">🟠 البرتقالي</h4>
-                            <div id="mp-orange-players" class="mp-player-list"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rules-box">
-                    <h2>📜 القواعد</h2>
-                    <ul>
-                        <li>🟢 الأخضر يصل <strong>يمين ← يسار</strong></li>
-                        <li>🟠 البرتقالي يصل <strong>أعلى ← أسفل</strong></li>
-                        <li>❓ أجب صح لتحتل الخلية بلونك</li>
-                        <li>🏆 أول فريق يوصل الطرفين يفوز!</li>
-                        <li>📞 لكل فريق <strong>فزعة</strong> واحدة</li>
-                    </ul>
-                </div>
                 <button id="start-btn" class="btn-primary">🎮 ابدأ المباراة</button>
             </div>
         </div>
@@ -117,6 +140,7 @@
                     <span class="team-dir">↕</span>
                     <button class="btn-fazaa-sm" id="orange-fazaa-btn">📞 فزعة</button>
                 </div>
+                <button class="btn-secondary" style="position: absolute; top: 1rem; left: 1rem; padding: 5px 12px; font-size: 0.9rem;" onclick="location.reload()">🏠 الرئيسية</button>
             </header>
 
             <main class="game-board">
@@ -210,7 +234,10 @@
                 <div id="result-icon" class="result-icon">🏆</div>
                 <h1 id="result-title">مبروك!</h1>
                 <p id="result-text">فاز الفريق!</p>
-                <button id="restart-btn" class="btn-primary">🔄 العب مرة ثانية</button>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1.5rem;">
+                    <button id="restart-btn" class="btn-primary">🔄 العب مرة ثانية</button>
+                    <button class="btn-secondary" onclick="location.reload()">🏠 العودة للرئيسية</button>
+                </div>
             </div>
         </div>
 
