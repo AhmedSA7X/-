@@ -235,40 +235,38 @@ body {
 .rules-box li:hover { color: var(--text-primary); }
 .rules-box li strong { color: var(--text-primary); }
 
-/* Tabs UI */
-.tabs-container {
+/* Accordion UI styled like Start Game */
+.accordion-container {
+    margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem;
+}
+.accordion-item { border-bottom: none; }
+.accordion-btn {
+    width: 100%; padding: 14px 25px; text-align: right;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+    color: var(--bg-deep); border: none;
+    border-radius: 50px; font-family: inherit; font-size: 1.1rem; font-weight: 800;
+    cursor: pointer; transition: all 0.4s var(--ease-spring);
+    box-shadow: 0 4px 20px var(--gold-glow), 0 1px 3px rgba(0,0,0,0.3);
+    position: relative; overflow: hidden;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.accordion-btn:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 25px var(--gold-glow);
+}
+.accordion-btn:active { transform: translateY(1px); }
+.acc-icon { font-size: 1rem; transition: transform 0.3s; color: var(--bg-deep); }
+.accordion-btn.active .acc-icon { transform: rotate(180deg); }
+
+.accordion-content {
+    max-height: 0; overflow: hidden; padding: 0 1.5rem;
+    transition: all 0.4s var(--ease-smooth); opacity: 0;
     background: var(--bg-glass);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.06);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
+    border-radius: var(--radius-lg); margin-top: 0.5rem;
 }
-.tabs-header {
-    display: flex; background: rgba(0,0,0,0.2);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.tab-btn {
-    flex: 1; padding: 14px 10px; border: none; background: transparent;
-    color: var(--text-secondary); font-family: inherit; font-size: 0.95rem; font-weight: 700;
-    cursor: pointer; transition: all 0.3s;
-    border-bottom: 2px solid transparent;
-}
-.tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
-.tab-btn.active {
-    color: var(--gold);
-    border-bottom: 2px solid var(--gold);
-    background: rgba(255,215,0,0.05);
-}
-.tab-content {
-    display: none; padding: 1.5rem;
-    animation: fadeInTab 0.4s var(--ease-smooth);
-}
-.tab-content.active { display: block; }
-
-@keyframes fadeInTab {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+.accordion-content.open {
+    max-height: 1000px; padding: 1.5rem; opacity: 1; margin-bottom: 0.5rem;
 }
 
 
