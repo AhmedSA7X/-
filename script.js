@@ -123,108 +123,267 @@ const buzzerInfo = $('buzzer-info');
 const buzzerInfoBadge = $('buzzer-info-badge');
 
 // ============================================================
-//  MULTIPLAYER INIT
+//  FIREBASE MULTIPLAYER INIT
 // ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBd5OLAAHGSVOptwtK3agFu03W_ch1yKR4",
+    authDomain: "hrof-faf04.firebaseapp.com",
+    projectId: "hrof-faf04",
+    storageBucket: "hrof-faf04.firebasestorage.app",
+    messagingSenderId: "296004967939",
+    appId: "1:296004967939:web:3f2039c41d0bcd825c3836",
+    measurementId: "G-Z6MLKLCGHC"
+};
+
+let dbRef = null;
+let roomRef = null;
+
 function initMultiplayer() {
     try {
-        mpSocket = io();
-    } catch (e) {
-        console.warn('Socket.IO not available - running without multiplayer');
-        return;
-    }
-
-    mpSocket.on('room-created', (roomId) => {
-        const display = $('room-code-display');
-        const actionsContainer = $('room-actions-container');
-        if (display) {
-            display.textContent = roomId;
-            display.style.display = 'block';
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-        if (actionsContainer) actionsContainer.style.display = 'none';
-        
-        mpJoinLink = `${window.location.origin}/join.html?room=${roomId}`;
-        const copyBtn = $('btn-copy-link');
-        if (copyBtn) copyBtn.style.display = 'inline-block';
-    });
+        const auth = firebase.auth();
+        const db = firebase.database();
+        dbRef = db;
 
-    // Handle host disconnection (e.g. if another host takes over?)
-    mpSocket.on('host-disconnected', () => {
-        mpPlayers = [];
-        updateMpPlayerList();
-    });
-
-    // Player list updates
-    mpSocket.on('player-list', (players) => {
-        if (players.length > mpPlayers.length) {
-            try { SFX.playerJoin(); } catch(e) {}
-        }
-        mpPlayers = players;
-        updateMpPlayerList();
-    });
-
-    // Buzzer result from server
-    mpSocket.on('buzzer-result', (data) => {
-        // data: { playerName, playerTeam, phase, timeLimit }
-        mpBuzzedPlayerName = data.playerName;
-        mpBuzzedPlayerTeam = data.playerTeam;
-        mpBuzzerPhase = data.phase;
-        if (data.phase === 1) mpFirstBuzzTeam = data.playerTeam;
-
-        try { SFX.buzzer(); } catch(e) {}
-
-        showBuzzerInfo(`🔔 ${data.playerName} ضغط أولاً! (${data.timeLimit} ثوانٍ)`, data.playerTeam);
-
-        // Update modal team badge to the buzzed player's team
-        const teamName = data.playerTeam === 'green' ? state.greenName : state.orangeName;
-        modalTeamBadge.textContent = `${data.playerName} - ${teamName}`;
-        modalTeamBadge.className = 'modal-team-badge ' + (data.playerTeam === 'green' ? 'green-badge' : 'orange-badge');
-
-        state.currentTeam = data.playerTeam;
-        updateTurnUI();
-
-        // Restart timer with buzzer time limit
-        clearInterval(questionTimerInterval);
-        questionTimeLeft = data.timeLimit;
-        questionTimerEl.textContent = questionTimeLeft;
-        questionTimerInterval = setInterval(() => {
-            questionTimeLeft--;
-            questionTimerEl.textContent = questionTimeLeft;
-            if (questionTimeLeft <= 0) {
-                clearInterval(questionTimerInterval);
-                handleBuzzerTimeout();
-            }
-        }, 1000);
-    });
-
-    // Phase change
-    mpSocket.on('phase-change', (data) => {
-        mpBuzzerPhase = data.phase;
-        try { SFX.phaseChange(); } catch(e) {}
-        if (data.phase === 2) {
-            const teamName = data.team === 'green' ? state.greenName : state.orangeName;
-            showBuzzerInfo(`⏳ الفرصة لـ${teamName} (${data.timeLimit} ثوانٍ)`, data.team);
-
-            modalTeamBadge.textContent = teamName;
-            modalTeamBadge.className = 'modal-team-badge ' + (data.team === 'green' ? 'green-badge' : 'orange-badge');
-
-            state.currentTeam = data.team;
-            updateTurnUI();
-
-            // Timer
-            clearInterval(questionTimerInterval);
-            questionTimeLeft = data.timeLimit;
-            questionTimerEl.textContent = questionTimeLeft;
-            questionTimerInterval = setInterval(() => {
-                questionTimeLeft--;
-                questionTimerEl.textContent = questionTimeLeft;
-                if (questionTimeLeft <= 0) {
-                    clearInterval(questionTimerInterval);
-                    handleBuzzerTimeout();
+        // Handle Auth State Change (MANDATORY REAL AUTH)
+        auth.onAuthStateChanged((user) => {
+            if (user && !user.isAnonymous) {
+                // Check for email verification
+                if (!user.emailVerified) {
+                    showScreen($('auth-screen'));
+                    hideAuthViews();
+                    $('view-verify').style.display = 'block';
+                    return;
                 }
-            }, 1000);
-        } else if (data.phase === 3) {
-            showBuzzerInfo(`⚡ من يضغط أولاً! (${data.timeLimit} ثوانٍ)`, null);
+
+                const nameDisplay = $('display-user-name');
+                if (nameDisplay) nameDisplay.textContent = user.displayName || user.email.split('@')[0];
+                showScreen(setupScreen);
+                proceedWithRoomSetup(user);
+            } else {
+                showScreen($('auth-screen'));
+            }
+        });
+
+        function hideAuthViews() {
+            if ($('view-login')) $('view-login').style.display = 'none';
+            if ($('view-register')) $('view-register').style.display = 'none';
+            if ($('view-verify')) $('view-verify').style.display = 'none';
+            if ($('auth-mode-selector')) $('auth-mode-selector').style.display = 'none';
         }
+
+        function proceedWithRoomSetup(user) {
+            // Generate Random 5 digit Room ID (only if not already set)
+            if (roomRef) return; 
+
+            const roomId = Math.floor(10000 + Math.random() * 90000).toString();
+            roomRef = db.ref('rooms/' + roomId);
+            
+            roomRef.set({
+                status: 'setup',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            roomRef.onDisconnect().remove(); 
+
+            // Update DOM with room code
+            const display = $('room-code-display');
+            const actionsContainer = $('room-actions-container');
+            if (display) {
+                display.textContent = roomId;
+                display.style.display = 'block';
+            }
+            if (actionsContainer) actionsContainer.style.display = 'none';
+            
+            mpJoinLink = `${window.location.origin}/join.html?room=${roomId}`;
+            const copyBtn = $('btn-copy-link');
+            if (copyBtn) copyBtn.style.display = 'inline-block';
+
+            // Watch for Players joining
+            roomRef.child('players').on('value', (snapshot) => {
+                const players = [];
+                snapshot.forEach(child => {
+                    players.push(child.val());
+                });
+                if (players.length > mpPlayers.length) {
+                    try { window.SFX && SFX.playerJoin(); } catch(e) {}
+                }
+                mpPlayers = players;
+                updateMpPlayerList();
+            });
+
+            // Host catching the buzzer hit
+            roomRef.child('buzzer').on('value', (snapshot) => {
+                const buzzData = snapshot.val();
+                if (buzzData && mpBuzzerPhase > 0 && mpBuzzerPhase < 4) {
+                    const oldPhase = mpBuzzerPhase;
+                    mpBuzzerPhase = 0; // Lock immediately to prevent race conditions executing local UI twice
+
+                    let timeLimit = 15;
+                    roomRef.child('buzzerResult').set({
+                        playerName: buzzData.name,
+                        playerTeam: buzzData.team,
+                        phase: oldPhase,
+                        timeLimit: timeLimit,
+                        ts: Date.now()
+                    });
+
+                    mpBuzzedPlayerName = buzzData.name;
+                    mpBuzzedPlayerTeam = buzzData.team;
+                    if (oldPhase === 1) mpFirstBuzzTeam = buzzData.team;
+                    
+                    try { window.SFX && SFX.buzzer(); } catch(e) {}
+                    showBuzzerInfo(`🔔 ${buzzData.name} ضغط أولاً! (${timeLimit} ثوانٍ)`, buzzData.team);
+                    
+                    const teamName = buzzData.team === 'green' ? state.greenName : state.orangeName;
+                    modalTeamBadge.textContent = `${buzzData.name} - ${teamName}`;
+                    modalTeamBadge.className = 'modal-team-badge ' + (buzzData.team === 'green' ? 'green-badge' : 'orange-badge');
+
+                    state.currentTeam = buzzData.team;
+                    updateTurnUI();
+
+                    clearInterval(questionTimerInterval);
+                    questionTimeLeft = timeLimit;
+                    questionTimerEl.textContent = questionTimeLeft;
+                    questionTimerInterval = setInterval(() => {
+                        questionTimeLeft--;
+                        questionTimerEl.textContent = questionTimeLeft;
+                        if (questionTimeLeft <= 0) {
+                            clearInterval(questionTimerInterval);
+                            handleBuzzerTimeoutWrapper(oldPhase);
+                        }
+                    }, 1000);
+                }
+            });
+        }
+
+    } catch (e) {
+        console.warn('Firebase initialization failed ->', e);
+    }
+}
+
+function handleGoogleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).catch((error) => {
+        if ($('auth-error')) $('auth-error').textContent = translateError(error);
+    });
+}
+
+function translateError(error) {
+    if (!error) return "";
+    let msg = error.message || error.toString();
+    // Remove "Firebase:" branding
+    msg = msg.replace(/Firebase:\s*/g, "");
+    
+    // Custom Arabic translations
+    if (msg.includes("email-already-in-use")) return "❌ هذا البريد مسجل مسبقاً، يرجى تسجيل الدخول.";
+    if (msg.includes("invalid-email")) return "❌ عنوان البريد الإلكتروني غير صحيح.";
+    if (msg.includes("weak-password")) return "❌ كلمة المرور ضعيفة جداً (يجب أن تكون 6 خانات فأكثر).";
+    if (msg.includes("user-not-found") || msg.includes("wrong-password")) return "❌ البريد أو كلمة المرور غير صحيحة.";
+    if (msg.includes("too-many-requests")) return "⚠️ محاولات كثيرة خاطئة، يرجى الانتظار قليلاً.";
+    if (msg.includes("operation-not-allowed")) return "❌ هذه الطريقة غير مفعلة حالياً.";
+    
+    return msg;
+}
+
+function setAuthMode(mode) {
+    const loginView = $('view-login');
+    const registerView = $('view-register');
+    const verifyView = $('view-verify');
+    const selector = $('auth-mode-selector');
+    const loginBtn = $('btn-mode-login');
+    const registerBtn = $('btn-mode-register');
+    if (!loginView || !registerView) return;
+
+    // Reset views
+    loginView.style.display = 'none';
+    registerView.style.display = 'none';
+    if (verifyView) verifyView.style.display = 'none';
+    if (selector) selector.style.display = 'flex';
+
+    if (mode === 'login') {
+        loginView.style.display = 'block';
+        loginBtn.className = 'btn-primary';
+        registerBtn.className = 'btn-secondary';
+    } else {
+        registerView.style.display = 'block';
+        loginBtn.className = 'btn-secondary';
+        registerBtn.className = 'btn-primary';
+    }
+}
+
+function loginEmail() {
+    const email = $('auth-email').value;
+    const pass = $('auth-pass').value;
+    const err = $('auth-error');
+    if (!email || !pass) { err.textContent = '❌ أدخل البريد وكلمة المرور'; return; }
+    firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => {
+        err.textContent = translateError(e);
+    });
+}
+
+function registerEmail() {
+    const name = $('reg-name').value;
+    const email = $('reg-email').value;
+    const pass = $('reg-pass').value;
+    const err = $('auth-error');
+    if (!name || !email || !pass) { err.textContent = '❌ أكمل جميع الحقول'; return; }
+    
+    firebase.auth().createUserWithEmailAndPassword(email, pass).then((result) => {
+        result.user.sendEmailVerification().then(() => {
+            alert("✅ تم إرسال رابط التحقق بنجاح! يرجى مراجعة بريدك الإلكتروني (In-box/Spam).");
+        }).catch(ev => {
+            console.error("Verification error:", ev);
+            alert("⚠️ تنبيه: تعذر إرسال رابط التفعيل حالياً. تأكد من تفعيل SMTP في الإعدادات.");
+        });
+        return result.user.updateProfile({ displayName: name });
+    }).catch(e => {
+        err.textContent = translateError(e);
+    });
+}
+
+function checkVerification() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    user.reload().then(() => {
+        if (user.emailVerified) {
+            window.location.reload();
+        } else {
+            const err = document.getElementById('auth-error');
+            if (err) err.textContent = '❌ لم يتم التحقق بعد، تأكد من بريدك.';
+        }
+    });
+}
+
+function resendVerification() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    user.sendEmailVerification().then(() => {
+        const err = document.getElementById('auth-error');
+        if (err) err.textContent = '✅ تمت إعادة إرسال الرابط بنجاح.';
+    }).catch(e => {
+        const err = document.getElementById('auth-error');
+        if (err) err.textContent = '⚠️ خطأ: ' + e.message;
+    });
+}
+
+function logout() {
+    firebase.auth().signOut().then(() => {
+        window.location.reload();
+    });
+}
+
+function syncStateToFirebase() {
+    if (!roomRef) return;
+    roomRef.child('gameState').set({
+        board: state.board,
+        currentTeam: state.currentTeam,
+        greenWins: state.greenWins || 0,
+        orangeWins: state.orangeWins || 0,
+        currentRound: state.currentRound || 1,
+        gridLetters: state.gridLetters || [],
+        ts: Date.now()
     });
 }
 
@@ -257,7 +416,7 @@ function copyJoinLink() {
 }
 
 function createRoom() {
-    if (mpSocket) mpSocket.emit('create-room');
+    initMultiplayer();
 }
 
 function showBuzzerInfo(text, team) {
@@ -271,24 +430,21 @@ function hideBuzzerInfo() {
     if (buzzerInfo) buzzerInfo.style.display = 'none';
 }
 
-function handleBuzzerTimeout() {
-    if (mpBuzzerPhase === 1) {
-        // Wrong in phase 1 -> go to phase 2 (other team)
+function handleBuzzerTimeoutWrapper(phaseVal) {
+    if (phaseVal === 1) {
         try { SFX.wrong(); } catch(e) {}
-        if (mpSocket) mpSocket.emit('answer-wrong-phase1');
+        if (roomRef) roomRef.child('phaseChange').set({ phase: 2, team: mpFirstBuzzTeam === 'green' ? 'orange' : 'green', timeLimit: 15, ts: Date.now() });
         const otherTeam = mpFirstBuzzTeam === 'green' ? 'orange' : 'green';
         const otherName = otherTeam === 'green' ? state.greenName : state.orangeName;
         setHostText(`⏳ انتهى الوقت! الفرصة تنتقل لـ${otherName}!`, 'sad');
-    } else if (mpBuzzerPhase === 2) {
-        // Wrong in phase 2 -> go to phase 3 (free-for-all)
+    } else if (phaseVal === 2) {
         try { SFX.wrong(); } catch(e) {}
-        if (mpSocket) mpSocket.emit('answer-wrong-phase2');
+        if (roomRef) roomRef.child('phaseChange').set({ phase: 3, timeLimit: 15, ts: Date.now() });
         setHostText(`⚡ الفرصة الأخيرة! من يضغط أولاً!`, 'sad');
-    } else if (mpBuzzerPhase === 3) {
-        // Phase 3 timeout -> loop back to phase 3 (keep buzzer open)
+    } else if (phaseVal === 3) {
         try { SFX.timeUp(); } catch(e) {}
-        if (mpSocket) mpSocket.emit('answer-wrong-phase3');
-        setHostText(`⚡ من يضغط أولاً! 3 ثوانٍ!`, 'sad');
+        if (roomRef) roomRef.child('phaseChange').set({ phase: 3, timeLimit: 15, ts: Date.now() });
+        setHostText(`⚡ من يضغط أولاً! 15 ثانية!`, 'sad');
     }
 }
 
@@ -396,6 +552,142 @@ function bfsPath(startCells, team, goalCheck) {
 }
 
 // ============================================================
+//  CUSTOM QUESTIONS (ADMIN PANEL)
+// ============================================================
+let customQuestionsData = JSON.parse(localStorage.getItem('horouf_customQs')) || {};
+
+// Custom Select Logic
+function toggleCustomSelect(type) {
+    const wrapper = $(`${type}-select-wrapper`);
+    // Close others
+    if (type !== 'letter' && $('letter-select-wrapper')) $('letter-select-wrapper').classList.remove('open');
+    if (type !== 'category' && $('category-select-wrapper')) $('category-select-wrapper').classList.remove('open');
+    if (wrapper) wrapper.classList.toggle('open');
+}
+
+function selectCustomOption(type, value, text) {
+    // We expect event to be available from the onclick handler
+    const e = window.event;
+    $(`admin-${type}`).value = value;
+    $(`selected-${type}-text`).textContent = text;
+    
+    // Update selected class
+    const options = $(`${type}-options-list`).querySelectorAll('.custom-option');
+    options.forEach(opt => opt.classList.remove('selected'));
+    if (e && e.currentTarget) {
+        e.currentTarget.classList.add('selected');
+    }
+    
+    $(`${type}-select-wrapper`).classList.remove('open');
+}
+
+// Close custom selects when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select-wrapper')) {
+        const wrappers = document.querySelectorAll('.custom-select-wrapper');
+        wrappers.forEach(w => w.classList.remove('open'));
+    }
+});
+
+function getCombinedQuestions(letter) {
+    let base = (typeof questionBank !== 'undefined') ? (questionBank[letter] || []) : [];
+    let custom = customQuestionsData[letter] || [];
+    return [...custom, ...base];
+}
+
+function saveAdminQuestion() {
+    const letter = $('admin-letter').value;
+    const cat = $('admin-category').value;
+    const qText = $('admin-question-text').value.trim();
+    const aText = $('admin-answer-text').value.trim();
+    const feedback = $('admin-feedback');
+
+    if (!qText || !aText) {
+        feedback.textContent = '❌ يرجى تعبئة نص السؤال والإجابة!';
+        feedback.style.color = '#ff4444';
+        return;
+    }
+
+    if (!customQuestionsData[letter]) customQuestionsData[letter] = [];
+    const newQ = { q: qText, a: [aText], cat: cat, cId: Date.now() };
+    customQuestionsData[letter].push(newQ);
+    
+    localStorage.setItem('horouf_customQs', JSON.stringify(customQuestionsData));
+    
+    $('admin-question-text').value = '';
+    $('admin-answer-text').value = '';
+    feedback.textContent = '✅ تم الحفظ بنجاح!';
+    feedback.style.color = '#4CAF50';
+    setTimeout(() => { feedback.textContent = ''; }, 3000);
+    
+    renderCustomQuestionsList();
+}
+
+function deleteCustomQuestion(letter, cId) {
+    if (!customQuestionsData[letter]) return;
+    customQuestionsData[letter] = customQuestionsData[letter].filter(q => q.cId !== cId);
+    if (customQuestionsData[letter].length === 0) delete customQuestionsData[letter];
+    
+    localStorage.setItem('horouf_customQs', JSON.stringify(customQuestionsData));
+    renderCustomQuestionsList();
+}
+
+function renderCustomQuestionsList() {
+    const list = $('custom-questions-list');
+    const countEl = $('admin-q-count');
+    if (!list) return;
+    list.innerHTML = '';
+    let count = 0;
+    
+    // 1) Custom user questions (with delete button)
+    let customCount = 0;
+    for (const letter in customQuestionsData) {
+        customQuestionsData[letter].forEach(q => {
+            customCount++;
+            count++;
+            const item = document.createElement('div');
+            item.className = 'admin-q-item';
+            item.innerHTML = `
+                <div class="admin-q-item-letter">${letter}</div>
+                <div class="admin-q-item-content">
+                    <span class="admin-q-item-cat">✏️ ${q.cat}</span>
+                    <span class="admin-q-item-text">${q.q}</span>
+                    <span class="admin-q-item-answer">الجواب: ${q.a[0]}</span>
+                </div>
+                <button class="admin-q-delete-btn" onclick="deleteCustomQuestion('${letter}', ${q.cId})">🗑️</button>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    // 2) Built-in question bank (no delete button)
+    if (typeof questionBank !== 'undefined') {
+        for (const letter in questionBank) {
+            questionBank[letter].forEach(q => {
+                count++;
+                const item = document.createElement('div');
+                item.className = 'admin-q-item';
+                item.innerHTML = `
+                    <div class="admin-q-item-letter">${letter}</div>
+                    <div class="admin-q-item-content">
+                        <span class="admin-q-item-cat">${q.cat}</span>
+                        <span class="admin-q-item-text">${q.q}</span>
+                        <span class="admin-q-item-answer">الجواب: ${q.a[0]}</span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+    }
+    
+    if (countEl) countEl.textContent = count;
+    
+    if (count === 0) {
+        list.innerHTML = '<div class="admin-empty-state"><span class="admin-empty-icon">📭</span><p>لا توجد أسئلة حتى الآن</p></div>';
+    }
+}
+
+// ============================================================
 //  GAME FLOW
 // ============================================================
 function startGame() {
@@ -423,7 +715,11 @@ function startGame() {
     orangeFazaaBtn.disabled = false;
 
     // Notify multiplayer
-    if (mpSocket) mpSocket.emit('game-start');
+    if (roomRef) {
+        roomRef.child('status').set({ state: 'game-started', ts: Date.now() });
+        roomRef.child('teams').set({ green: gName, orange: oName });
+        syncStateToFirebase();
+    }
 
     updateScoreUI();
     showScreen(gameScreen);
@@ -478,21 +774,25 @@ function onHexClick(index) {
     } else {
         showQuestion(letter);
     }
+
+    // Notify players which hex is being looked at
+    if (roomRef) roomRef.child('hexSelected').set({ index: index, letter: letter, ts: Date.now() });
 }
 
 function showQuestion(letter, category = null) {
     let pool = [];
     let trackKey = letter;
 
+    const letterQuestions = getCombinedQuestions(letter);
+
     if (category) {
         // الفزعة: اسحب الأسئلة من نفس الحرف للمجال المطلوب
-        const letterQuestions = questionBank[letter] || [];
         pool = letterQuestions.filter(q => q.cat === category);
         
         if (pool.length === 0) pool = letterQuestions;
         trackKey = 'FAZAA_' + category + '_' + letter;
     } else {
-        pool = questionBank[letter] || [];
+        pool = letterQuestions;
     }
 
     if (!state.usedQuestions[trackKey]) state.usedQuestions[trackKey] = [];
@@ -542,14 +842,18 @@ function showQuestion(letter, category = null) {
 
         try { SFX.questionOpen(); } catch(e) {}
 
-        if (mpSocket) {
+        if (roomRef) {
             const twSpeed = parseInt(document.getElementById('typewriter-speed')?.value || '20', 10);
-            mpSocket.emit('question-open', {
-                question: question.q,
+            roomRef.child('question').set({
+                text: question.q,
                 letter: letter,
                 category: state.selectedCategory || question.cat,
-                twSpeed: twSpeed
+                twSpeed: twSpeed,
+                ts: Date.now()
             });
+            roomRef.child('status').set({ state: 'question-open', ts: Date.now() });
+            roomRef.child('buzzer').remove(); 
+            roomRef.child('buzzerResult').remove();
         }
     } else {
         // No multiplayer players: use classic timer
@@ -582,7 +886,7 @@ function showQuestion(letter, category = null) {
     btnAwardGreen.onclick = () => {
         clearInterval(questionTimerInterval);
         hideModal(questionModal);
-        if (mpSocket) mpSocket.emit('question-close');
+        if (roomRef) roomRef.child('status').set({ state: 'question-closed', ts: Date.now() });
         hideBuzzerInfo();
         awardCell('green');
     };
@@ -590,7 +894,7 @@ function showQuestion(letter, category = null) {
     btnAwardOrange.onclick = () => {
         clearInterval(questionTimerInterval);
         hideModal(questionModal);
-        if (mpSocket) mpSocket.emit('question-close');
+        if (roomRef) roomRef.child('status').set({ state: 'question-closed', ts: Date.now() });
         hideBuzzerInfo();
         awardCell('orange');
     };
@@ -629,7 +933,10 @@ function awardCell(team) {
     setTimeout(() => setHostText(`إجابة صحيحة! الدور لـ ${name}! اختاروا حرف يا أبطال 🔷`), 600);
 
     // Notify multiplayer
-    if (mpSocket) mpSocket.emit('cell-awarded', { team, index: idx });
+    if (roomRef) {
+        roomRef.child('cellAwarded').set({ team, index: idx, ts: Date.now() });
+        syncStateToFirebase();
+    }
 }
 
 function handleTimeOut() {
@@ -645,6 +952,7 @@ function handleTimeOut() {
     updateTurnUI();
     
     setHostText(`انتهى الوقت! ⏳ الفرصة تنتقل لـ ${nextName} للإجابة على نفس السؤال!`, 'sad');
+    saveGameState();
     
     // Restart timer for 30s
     clearInterval(questionTimerInterval);
@@ -666,6 +974,7 @@ function switchTurn() {
 
     const name = state.currentTeam === 'green' ? state.greenName : state.orangeName;
     setTimeout(() => setHostText(`دور ${name}! اختاروا حرف يا أبطال! 🔷`), 600);
+    syncStateToFirebase();
 }
 
 function endGame(winTeam, winPath) {
@@ -695,14 +1004,14 @@ function endGame(winTeam, winPath) {
             spawnConfetti();
             showScreen(resultScreen);
             try { SFX.victory(); } catch(e) {}
-            if (mpSocket) mpSocket.emit('match-won', { winnerName: winName });
+            if (roomRef) roomRef.child('matchResult').set({ winnerName: winName, ts: Date.now() });
         } else {
             roundResultTitle.textContent = `نهاية ${getRoundName(state.currentRound)}`;
             roundResultText.textContent = `فاز ${winName} ${emoji} بهذه الجولة!`;
             roundGreenScore.textContent = state.greenWins;
             roundOrangeScore.textContent = state.orangeWins;
             showModal(roundResultModal);
-            if (mpSocket) mpSocket.emit('round-won', { winnerName: winName });
+            if (roomRef) roomRef.child('roundResult').set({ winnerName: winName, ts: Date.now() });
         }
     }, 400);
 }
@@ -777,12 +1086,123 @@ function spawnConfetti() {
 }
 
 // ============================================================
+//  AUTO-RECOVERY (SAVE STATE)
+// ============================================================
+function returnToSetup() {
+    showScreen(setupScreen);
+    checkSavedGames();
+}
+
+function manualSaveGame() {
+    saveGameState();
+    const originalText = hostText.textContent;
+    setHostText(`تم حفظ المباراة بنجاح! 💾`, 'celebrate');
+    setTimeout(() => { 
+        if(state.gameActive) setHostText(originalText); 
+    }, 3000);
+}
+
+function saveGameState() {
+    if (!state.gameActive) {
+        localStorage.removeItem('horouf_gameState');
+        return;
+    }
+    localStorage.setItem('horouf_gameState', JSON.stringify(state));
+}
+
+// ============================================================
+//  SAVED GAMES UI
+// ============================================================
+function checkSavedGames() {
+    const saved = localStorage.getItem('horouf_gameState');
+    const section = $('saved-games-section');
+    if (!section) return;
+    
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            if (s.gameActive) {
+                $('saved-green-name').textContent = s.greenName || 'الأخضر';
+                $('saved-orange-name').textContent = s.orangeName || 'البرتقالي';
+                $('saved-round-info').textContent = getRoundName(s.currentRound || 1);
+                $('saved-score-info').textContent = `${s.greenWins || 0} - ${s.orangeWins || 0}`;
+                section.style.display = 'block';
+                return;
+            }
+        } catch(e) {}
+    }
+    section.style.display = 'none';
+}
+
+function resumeSavedGame() {
+    if (restoreGameState()) {
+        try { SFX.init(); } catch(e) {}
+    }
+}
+
+function deleteSavedGame() {
+    localStorage.removeItem('horouf_gameState');
+    checkSavedGames();
+}
+
+function restoreGameState() {
+    const saved = localStorage.getItem('horouf_gameState');
+    if (!saved) return false;
+    try {
+        const parsedState = JSON.parse(saved);
+        if (!parsedState.gameActive) return false;
+        state = parsedState;
+        
+        greenTeamName.textContent = state.greenName;
+        orangeTeamName.textContent = state.orangeName;
+        if (state.fazaa.green) greenFazaaBtn.classList.add('used');
+        if (state.fazaa.orange) orangeFazaaBtn.classList.add('used');
+        greenFazaaBtn.disabled = state.fazaa.green;
+        orangeFazaaBtn.disabled = state.fazaa.orange;
+        
+        updateScoreUI();
+        
+        // Rebuild grid
+        hexGrid.innerHTML = '';
+        let idx = 0;
+        for (let r = 0; r < GRID_ROWS; r++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'hex-row' + (r % 2 === 1 ? ' offset' : '');
+            for (let c = 0; c < GRID_COLS; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'hex-cell';
+                cell.dataset.index = idx;
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.innerHTML = `<span>${state.gridLetters[idx]}</span>`;
+                if (state.board[idx] === 'green') cell.classList.add('claimed', 'claimed-green');
+                else if (state.board[idx] === 'orange') cell.classList.add('claimed', 'claimed-orange');
+                cell.addEventListener('click', () => onHexClick(parseInt(cell.dataset.index)));
+                rowDiv.appendChild(cell);
+                idx++;
+            }
+            hexGrid.appendChild(rowDiv);
+        }
+        
+        updateTurnUI();
+        showScreen(gameScreen);
+        const currentName = state.currentTeam === 'green' ? state.greenName : state.orangeName;
+        setHostText(`تم استعادة المباراة بسلام! الدور لـ ${currentName} 🔥`, 'celebrate');
+        return true;
+    } catch(e) {
+        console.error("Failed to restore match", e);
+        return false;
+    }
+}
+
+// ============================================================
 //  EVENT LISTENERS
 // ============================================================
 $('start-btn').addEventListener('click', startGame);
+if ($('google-auth-btn')) $('google-auth-btn').addEventListener('click', handleGoogleLogin);
 $('restart-btn').addEventListener('click', () => {
     showScreen(setupScreen);
-    if (mpSocket) mpSocket.emit('game-reset');
+    if (roomRef) roomRef.child('status').set({ state: 'game-reset', ts: Date.now() });
 });
 nextRoundBtn.addEventListener('click', startNextRound);
 
@@ -796,6 +1216,11 @@ $('cancel-fazaa-btn').addEventListener('click', () => {
     const btn = state.currentTeam === 'green' ? greenFazaaBtn : orangeFazaaBtn;
     btn.classList.remove('used');
     btn.disabled = false;
+});
+
+// Boot check
+document.addEventListener('DOMContentLoaded', () => {
+    checkSavedGames();
 });
 
 document.querySelectorAll('.btn-cat').forEach(btn => {

@@ -280,6 +280,25 @@
             border: 1px solid rgba(124,77,255,0.2);
         }
 
+        /* ---- MINI BOARD ---- */
+        .mini-board {
+            display: grid; gap: 4px; margin: 1rem 0;
+            width: 100%; max-width: 250px;
+        }
+        .mini-row { display: flex; justify-content: center; gap: 4px; margin-bottom: -10px; }
+        .mini-row.offset { margin-right: 24px; }
+        .mini-hex {
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.05);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 800; color: var(--text-dim);
+            transition: all 0.3s;
+        }
+        .mini-hex.active-q { border: 2px solid var(--gold); background: rgba(255,215,0,0.2); color: var(--gold); }
+        .mini-hex.claimed-green { background: var(--green); color: var(--bg-deep); box-shadow: 0 0 10px var(--green-glow); }
+        .mini-hex.claimed-orange { background: var(--orange); color: var(--bg-deep); box-shadow: 0 0 10px var(--orange-glow); }
+
         /* ---- Responsive ---- */
         @media (max-width: 400px) {
             .buzzer-btn { width: 150px; height: 150px; font-size: 1.2rem; }
@@ -289,8 +308,69 @@
 </head>
 <body>
 
+    <!-- ======== AUTH SCREEN (MANDATORY) ======== -->
+    <div id="auth-screen" class="screen active">
+        <div class="join-logo">
+            <div class="hex">🔒</div>
+            <h1>تسجيل الدخول</h1>
+            <p>يرجى تسجيل الدخول للانضمام للعبة</p>
+        </div>
+            <div id="auth-mode-selector" style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                <button onclick="setAuthMode('login')" id="btn-mode-login" class="btn-join" style="flex: 1; padding: 10px; font-size: 0.9rem;">تسجيل الدخول</button>
+                <button onclick="setAuthMode('register')" id="btn-mode-register" class="btn-join" style="flex: 1; padding: 10px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: white;">إنشاء حساب</button>
+            </div>
+
+            <!-- Login View -->
+            <div id="view-login">
+                <label>📧 البريد الإلكتروني</label>
+                <input type="email" id="auth-email" placeholder="example@mail.com" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 1rem; outline: none;">
+                
+                <label>🔑 كلمة المرور</label>
+                <input type="password" id="auth-pass" placeholder="******" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 1rem; outline: none;">
+
+                <button onclick="loginEmail()" class="btn-join" style="width: 100%; padding: 12px; margin-bottom: 1.5rem;">دخول</button>
+            </div>
+
+            <!-- Register View -->
+            <div id="view-register" style="display: none;">
+                <label>👤 الاسم الكامل</label>
+                <input type="text" id="reg-name" placeholder="اسمك الكريم" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 1rem; outline: none;">
+                
+                <label>📧 البريد الإلكتروني</label>
+                <input type="email" id="reg-email" placeholder="example@mail.com" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 1rem; outline: none;">
+                
+                <label>🔑 كلمة المرور</label>
+                <input type="password" id="reg-pass" placeholder="******" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 1rem; outline: none;">
+
+                <button onclick="registerEmail()" class="btn-join" style="width: 100%; padding: 12px; margin-bottom: 1.5rem;">إنشاء حساب جديد</button>
+            </div>
+
+            <!-- Verification View -->
+            <div id="view-verify" style="display: none; text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📧</div>
+                <h2 style="color: var(--gold); margin-bottom: 0.5rem; font-size: 1.2rem;">تحقق من بريدك</h2>
+                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem; line-height: 1.4;">أرسلنا رابط التحقق لبريدك. بعد التفعيل، اضغط على الزر أدناه.</p>
+                <button onclick="checkVerification()" class="btn-join" style="width: 100%; padding: 10px; margin-bottom: 10px;">تم التفعيل ✅</button>
+                <button onclick="resendVerification()" class="btn-join" style="width: 100%; padding: 8px; font-size: 0.8rem; background: rgba(255,255,255,0.05);">إعادة إرسال الرابط</button>
+                <button onclick="logout()" class="btn-join" style="width: 100%; padding: 8px; font-size: 0.8rem; margin-top: 10px; color: #ffbbbb; background: rgba(255,0,0,0.05);">خروج</button>
+            </div>
+
+            <div style="text-align: center; margin: 1rem 0; color: var(--text-dim); position: relative;">
+                <span style="background: var(--bg-deep); padding: 0 10px; position: relative; z-index: 2;">أو</span>
+                <hr style="position: absolute; top: 50%; left: 0; right: 0; border: 0.5px solid rgba(255,255,255,0.1); margin: 0;">
+            </div>
+
+            <button id="google-auth-btn" class="btn-join" style="background: white; color: #444; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+                متابعة بواسطة جوجل
+            </button>
+            
+            <div id="auth-error" style="color: #ff4444; font-size: 0.85rem; margin-top: 1rem; text-align: center; min-height: 1.2rem;"></div>
+        </div>
+    </div>
+
     <!-- ======== JOIN SCREEN ======== -->
-    <div id="join-screen" class="screen active">
+    <div id="join-screen" class="screen">
         <div style="text-align: center; margin-bottom: 1.5rem; width: 100%; max-width: 420px;">
             <button class="btn-secondary" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;" onclick="window.location.href='index.html'">🔙 رجوع للخلف</button>
         </div>
@@ -299,12 +379,23 @@
             <h1>حروف أحمد</h1>
             <p>انضم للمباراة!</p>
         </div>
+
+        <!-- USER PROFILE BAR -->
+        <div class="user-profile-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 420px; margin: 0 auto 1.5rem auto;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2rem;">👤</span>
+                <span id="display-user-name" style="font-weight: bold; color: var(--gold);">جاري التحميل...</span>
+            </div>
+            <button onclick="logout()" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.2); color: #ffbbbb; cursor: pointer;">خروج</button>
+        </div>
         <div class="join-card">
             <label>🔢 رقم الغرفة</label>
             <input type="text" id="room-id" placeholder="أدخل رقم الغرفة (5 أرقام)" maxlength="5" autocomplete="off" style="letter-spacing: 5px; font-size: 1.5rem;">
 
             <label>✏️ اسمك</label>
             <input type="text" id="player-name" placeholder="اكتب اسمك هنا..." maxlength="20" autocomplete="off">
+
+            <!-- تسجيل جوجل (REMOVED - now in auth-screen) -->
 
             <label>🏷️ اختر فريقك</label>
             <div class="team-select">
@@ -346,6 +437,9 @@
                 </div>
             </div>
 
+            <!-- Mini Board Display -->
+            <div id="mini-board" class="mini-board"></div>
+
             <div class="buzzer-timer" id="buzzer-timer">5</div>
 
             <div class="buzzer-btn-wrap">
@@ -358,18 +452,61 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="sounds.js"></script>
     <script>
         // ============================================================
-        //  JOIN PAGE CLIENT
+        //  JOIN PAGE CLIENT (FIREBASE)
         // ============================================================
-        const socket = io();
+        const firebaseConfig = {
+            apiKey: "AIzaSyBd5OLAAHGSVOptwtK3agFu03W_ch1yKR4",
+            authDomain: "hrof-faf04.firebaseapp.com",
+            projectId: "hrof-faf04",
+            storageBucket: "hrof-faf04.firebasestorage.app",
+            messagingSenderId: "296004967939",
+            appId: "1:296004967939:web:3f2039c41d0bcd825c3836",
+            measurementId: "G-Z6MLKLCGHC"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let myRoomRef = null;
         let myData = null;
         let selectedTeam = null;
         let buzzerTimerInterval = null;
         let typewriterTimeout = null;
-        let currentFullQuestion = '';  // store full question text for typewriter
+        let currentFullQuestion = ''; 
+
+        auth.onAuthStateChanged((user) => {
+            if (user && !user.isAnonymous) {
+                // Check for email verification
+                if (!user.emailVerified) {
+                    showScreen(document.getElementById('auth-screen'));
+                    hideAuthViews();
+                    document.getElementById('view-verify').style.display = 'block';
+                    return;
+                }
+
+                const nameDisplay = document.getElementById('display-user-name');
+                if (nameDisplay) nameDisplay.textContent = user.displayName || user.email.split('@')[0];
+                showScreen(joinScreen);
+                if (user.displayName) playerNameInput.value = user.displayName;
+            } else {
+                showScreen(document.getElementById('auth-screen'));
+            }
+        });
+
+        function hideAuthViews() {
+            const views = ['view-login', 'view-register', 'view-verify', 'auth-mode-selector'];
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
 
         // DOM
         const joinScreen = document.getElementById('join-screen');
@@ -397,20 +534,21 @@
         const buzzerTimer = document.getElementById('buzzer-timer');
         const buzzResult = document.getElementById('buzz-result');
         const phaseBanner = document.getElementById('phase-banner');
+        const miniBoard = document.getElementById('mini-board');
+
+        let teamNames = { green: 'الأخضر', orange: 'البرتقالي' };
 
         function showScreen(screen) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             screen.classList.add('active');
         }
 
-        // ---- Team Selection ----
         function selectTeam(team) {
             selectedTeam = team;
             document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('selected'));
             document.querySelector(`.team-btn[data-team="${team}"]`).classList.add('selected');
         }
 
-        // ---- Join ----
         function joinGame() {
             const roomId = document.getElementById('room-id').value.trim();
             const name = playerNameInput.value.trim();
@@ -419,194 +557,232 @@
             if (!selectedTeam) { errorMsg.textContent = 'اختر فريقك!'; return; }
             errorMsg.textContent = '';
 
-            socket.emit('player-join', { name, team: selectedTeam, roomId });
-            try { SFX.init(); } catch(e) {}
+            myRoomRef = db.ref('rooms/' + roomId);
+            
+            myRoomRef.child('status').once('value').then(snap => {
+                if (!snap.exists()) {
+                    errorMsg.textContent = 'الغرفة غير موجودة!';
+                    return;
+                }
+                
+                myData = { name, team: selectedTeam };
+                myRoomRef.child('players').child(auth.currentUser.uid).set(myData);
+                
+                const badge = document.getElementById('my-badge');
+                badge.textContent = `${myData.team === 'green' ? '🟢' : '🟠'} ${myData.name}`;
+                badge.className = `player-badge ${myData.team === 'green' ? 'green-badge' : 'orange-badge'}`;
+
+                document.getElementById('buzzer-my-name').textContent = myData.name;
+                const teamBadge = document.getElementById('buzzer-my-team');
+                teamBadge.textContent = myData.team === 'green' ? '🟢 الأخضر' : '🟠 البرتقالي';
+                teamBadge.className = `buzzer-team-badge ${myData.team === 'green' ? 'g' : 'o'}`;
+
+                showScreen(waitingScreen);
+                try { SFX.init(); } catch(e) {}
+
+                setupListeners();
+            });
         }
 
-        socket.on('join-success', (data) => {
-            myData = data;
-            const badge = document.getElementById('my-badge');
-            badge.textContent = `${data.team === 'green' ? '🟢' : '🟠'} ${data.name}`;
-            badge.className = `player-badge ${data.team === 'green' ? 'green-badge' : 'orange-badge'}`;
-
-            document.getElementById('buzzer-my-name').textContent = data.name;
-            const teamBadge = document.getElementById('buzzer-my-team');
-            teamBadge.textContent = data.team === 'green' ? '🟢 الأخضر' : '🟠 البرتقالي';
-            teamBadge.className = `buzzer-team-badge ${data.team === 'green' ? 'g' : 'o'}`;
-
-            showScreen(waitingScreen);
-        });
-
-        socket.on('join-error', (msg) => {
-            errorMsg.textContent = msg;
-        });
-
-        // ---- Player List ----
-        socket.on('player-list', (players) => {
-            waitingPlayers.innerHTML = '';
-            players.forEach(p => {
-                const chip = document.createElement('div');
-                chip.className = `player-chip ${p.team === 'green' ? 'green-chip' : 'orange-chip'}`;
-                chip.textContent = `${p.team === 'green' ? '🟢' : '🟠'} ${p.name}`;
-                waitingPlayers.appendChild(chip);
+        function setupListeners() {
+            myRoomRef.child('players').on('value', snap => {
+                waitingPlayers.innerHTML = '';
+                snap.forEach(child => {
+                    const p = child.val();
+                    const chip = document.createElement('div');
+                    chip.className = `player-chip ${p.team === 'green' ? 'green-chip' : 'orange-chip'}`;
+                    chip.textContent = `${p.team === 'green' ? '🟢' : '🟠'} ${p.name}`;
+                    waitingPlayers.appendChild(chip);
+                });
             });
-        });
 
-        // ---- Game Started ----
-        socket.on('game-started', () => {
-            showScreen(buzzerScreen);
-            buzzerStatus.textContent = '🎮 اللعبة بدأت! بانتظار السؤال...';
-            buzzerBtn.disabled = true;
-        });
+            myRoomRef.child('status').on('value', snap => {
+                const s = snap.val();
+                if (!s) return;
+                const state = s.state;
+                if (state === 'game-started') {
+                    showScreen(buzzerScreen);
+                    buzzerStatus.textContent = '🎮 اللعبة بدأت! بانتظار السؤال...';
+                    buzzerBtn.disabled = true;
+                } else if (state === 'question-open') {
+                    myRoomRef.child('question').once('value').then(qs => {
+                        const data = qs.val();
+                        if (!data) return;
+                        clearTimeout(typewriterTimeout);
+                        currentFullQuestion = data.text;
+                        buzzerQArea.classList.add('visible');
+                        bqLetter.textContent = data.letter;
+                        bqCategory.textContent = data.category;
+                        
+                        const speed = data.twSpeed || 20;
+                        if (speed > 0) {
+                            bqText.textContent = '';
+                            let i = 0;
+                            function typeWriter() {
+                                if (i < data.text.length) {
+                                    bqText.textContent += data.text.charAt(i);
+                                    i++;
+                                    typewriterTimeout = setTimeout(typeWriter, speed);
+                                }
+                            }
+                            typeWriter();
+                        } else {
+                            bqText.textContent = data.text;
+                        }
 
-        // ---- Question Shown ----
-        socket.on('question-show', (data) => {
-            clearTimeout(typewriterTimeout);
-            currentFullQuestion = data.question;
-            
-            buzzerQArea.classList.add('visible');
-            bqLetter.textContent = data.letter;
-            bqCategory.textContent = data.category;
-            
-            // Typewriter effect
-            const speed = data.twSpeed || 20;
-            if (speed > 0) {
-                bqText.textContent = '';
-                let i = 0;
-                function typeWriter() {
-                    if (i < data.question.length) {
-                        bqText.textContent += data.question.charAt(i);
-                        i++;
-                        typewriterTimeout = setTimeout(typeWriter, speed);
-                    }
+                        buzzerBtn.disabled = false;
+                        buzzerBtn.classList.remove('buzzed');
+                        buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                        buzzResult.textContent = '';
+                        buzzerTimer.classList.remove('visible');
+
+                        phaseBanner.classList.add('visible');
+                        phaseBanner.className = 'phase-banner visible phase-wait';
+                        phaseBanner.textContent = '⚡ كن أول من يضغط!';
+
+                        buzzerStatus.textContent = '❓ سؤال جديد! اضغط الزر بسرعة!';
+                    });
+                } else if (state === 'question-closed') {
+                    clearInterval(buzzerTimerInterval);
+                    clearTimeout(typewriterTimeout);
+                    buzzerQArea.classList.remove('visible');
+                    buzzerBtn.disabled = true;
+                    buzzerBtn.classList.remove('buzzed');
+                    buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                    buzzerTimer.classList.remove('visible');
+                    phaseBanner.classList.remove('visible');
+                    buzzResult.textContent = '';
+                    buzzerStatus.textContent = '🎮 بانتظار السؤال التالي...';
+                } else if (state === 'game-reset') {
+                    showScreen(waitingScreen);
+                    buzzerStatus.textContent = '🎮 بانتظار السؤال...';
                 }
-                typeWriter();
-            } else {
-                bqText.textContent = data.question;
-            }
+            });
 
-            buzzerBtn.disabled = false;
-            buzzerBtn.classList.remove('buzzed');
-            buzzerBtn.innerHTML = '🔔<br>اضغط!';
-            buzzResult.textContent = '';
-            buzzerTimer.classList.remove('visible');
+            myRoomRef.child('teams').on('value', snap => {
+                const teams = snap.val();
+                if (!teams) return;
+                teamNames = teams;
+                const teamBadge = document.getElementById('buzzer-my-team');
+                if (myData.team === 'green') {
+                    teamBadge.textContent = '🟢 ' + teams.green;
+                } else {
+                    teamBadge.textContent = '🟠 ' + teams.orange;
+                }
+            });
 
-            phaseBanner.classList.add('visible');
-            phaseBanner.className = 'phase-banner visible phase-wait';
-            phaseBanner.textContent = '⚡ كن أول من يضغط!';
+            myRoomRef.child('gameState').on('value', snap => {
+                const gs = snap.val();
+                if (!gs) return;
+                renderMiniBoard(gs.board, gs.gridLetters);
+                
+                // Update turn indicator in status if not buzzing
+                if (buzzerBtn.disabled && !buzzerQArea.classList.contains('visible')) {
+                    const currentName = gs.currentTeam === 'green' ? teamNames.green : teamNames.orange;
+                    buzzerStatus.textContent = `⏳ دور ${currentName}...`;
+                }
+            });
 
-            buzzerStatus.textContent = '❓ سؤال جديد! اضغط الزر بسرعة!';
-        });
+            myRoomRef.child('hexSelected').on('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+                const allHexes = document.querySelectorAll('.mini-hex');
+                allHexes.forEach(h => h.classList.remove('active-q'));
+                const active = document.querySelector(`.mini-hex[data-index="${data.index}"]`);
+                if (active) active.classList.add('active-q');
+            });
 
-        // ---- Buzzer Press ----
+            myRoomRef.child('phaseChange').on('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+                clearInterval(buzzerTimerInterval);
+                clearTimeout(typewriterTimeout);
+                bqText.textContent = currentFullQuestion; 
+                buzzResult.textContent = '';
+
+                if (data.phase === 2) {
+                    if (myData.team === data.team) {
+                        buzzerBtn.disabled = false;
+                        buzzerBtn.classList.remove('buzzed');
+                        buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                        phaseBanner.className = 'phase-banner visible phase-your-turn';
+                        phaseBanner.textContent = `✨ دور فريقك! لديكم ${data.timeLimit} ثوانٍ!`;
+                        buzzerStatus.textContent = '⏰ الفرصة لفريقك! اضغط بسرعة!';
+                    } else {
+                        buzzerBtn.disabled = true;
+                        phaseBanner.className = 'phase-banner visible phase-other-turn';
+                        phaseBanner.textContent = `⏳ الفرصة للفريق الآخر (${data.timeLimit} ثوانٍ)`;
+                        buzzerStatus.textContent = '⏳ بانتظار الفريق الآخر...';
+                    }
+                    startBuzzerTimer(data.timeLimit);
+                } else if (data.phase === 3) {
+                    buzzerBtn.disabled = false;
+                    buzzerBtn.classList.remove('buzzed');
+                    buzzerBtn.innerHTML = '🔔<br>اضغط!';
+                    phaseBanner.className = 'phase-banner visible phase-free';
+                    phaseBanner.textContent = `⚡ أي أحد يضغط! ${data.timeLimit} ثوانٍ فقط!`;
+                    buzzerStatus.textContent = '🔥 المرحلة الأخيرة! من يضغط أولاً!';
+                }
+            });
+
+            myRoomRef.child('buzzerResult').on('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+                clearInterval(buzzerTimerInterval);
+                clearTimeout(typewriterTimeout);
+                buzzerBtn.disabled = true;
+
+                if (data.playerName === myData.name && data.playerTeam === myData.team) {
+                    buzzResult.textContent = `🎉 أنت ضغطت أولاً! لديك ${data.timeLimit} ثوانٍ للإجابة!`;
+                    buzzResult.style.color = 'var(--green)';
+                } else {
+                    buzzResult.textContent = `🔔 ${data.playerName} ضغط أولاً!`;
+                    buzzResult.style.color = 'var(--gold)';
+                }
+
+                phaseBanner.className = 'phase-banner visible phase-your-turn';
+                if (data.phase === 1) {
+                    phaseBanner.textContent = `🔔 ${data.playerName} يجيب الآن (${data.timeLimit} ثوانٍ)`;
+                } else if (data.phase === 3) {
+                    phaseBanner.textContent = `⚡ ${data.playerName} يجيب (${data.timeLimit} ثوانٍ)`;
+                }
+
+                startBuzzerTimer(data.timeLimit);
+            });
+
+            myRoomRef.child('roundResult').on('value', snap => {
+                if(!snap.val()) return;
+                buzzerStatus.innerHTML = `🏁 انتهت الجولة! فاز: <strong>${snap.val().winnerName}</strong>`;
+                buzzerQArea.classList.remove('visible');
+                buzzerBtn.disabled = true;
+                phaseBanner.classList.remove('visible');
+            });
+            
+            myRoomRef.child('matchResult').on('value', snap => {
+                if(!snap.val()) return;
+                buzzerStatus.innerHTML = `🏆 انتهت المباراة! البطل: <strong>${snap.val().winnerName}</strong>`;
+                buzzerQArea.classList.remove('visible');
+                buzzerBtn.disabled = true;
+                phaseBanner.classList.remove('visible');
+            });
+        }
+
         function pressBuzzer() {
-            if (buzzerBtn.disabled) return;
+            if (buzzerBtn.disabled || !myRoomRef) return;
             try { SFX.buzzer(); } catch(e) {}
-            socket.emit('buzzer-press');
+            
+            myRoomRef.child('buzzer').transaction((currentData) => {
+                if (currentData === null) {
+                    return { uid: auth.currentUser.uid, name: myData.name, team: myData.team, ts: firebase.database.ServerValue.TIMESTAMP };
+                }
+                return;
+            });
+
             buzzerBtn.disabled = true;
             buzzerBtn.classList.add('buzzed');
             buzzerBtn.innerHTML = '✅<br>ضغطت!';
         }
 
-        // ---- Buzzer Result ----
-        socket.on('buzzer-result', (data) => {
-            clearInterval(buzzerTimerInterval);
-            clearTimeout(typewriterTimeout); // stop typewriter, keep partial text
-            buzzerBtn.disabled = true;
-
-            if (data.playerName === myData?.name && data.playerTeam === myData?.team) {
-                buzzResult.textContent = `🎉 أنت ضغطت أولاً! لديك ${data.timeLimit} ثوانٍ للإجابة!`;
-                buzzResult.style.color = 'var(--green)';
-            } else {
-                buzzResult.textContent = `🔔 ${data.playerName} ضغط أولاً!`;
-                buzzResult.style.color = 'var(--gold)';
-            }
-
-            phaseBanner.className = 'phase-banner visible phase-your-turn';
-            if (data.phase === 1) {
-                phaseBanner.textContent = `🔔 ${data.playerName} يجيب الآن (${data.timeLimit} ثوانٍ)`;
-            } else if (data.phase === 3) {
-                phaseBanner.textContent = `⚡ ${data.playerName} يجيب (${data.timeLimit} ثوانٍ)`;
-            }
-
-            // Timer
-            startBuzzerTimer(data.timeLimit);
-        });
-
-        // ---- Phase Change ----
-        socket.on('phase-change', (data) => {
-            clearInterval(buzzerTimerInterval);
-            clearTimeout(typewriterTimeout);
-            bqText.textContent = currentFullQuestion; // ensure full question shown
-            buzzResult.textContent = '';
-
-            if (data.phase === 2) {
-                if (myData?.team === data.team) {
-                    // my team's turn
-                    buzzerBtn.disabled = false;
-                    buzzerBtn.classList.remove('buzzed');
-                    buzzerBtn.innerHTML = '🔔<br>اضغط!';
-                    phaseBanner.className = 'phase-banner visible phase-your-turn';
-                    phaseBanner.textContent = `✨ دور فريقك! لديكم ${data.timeLimit} ثوانٍ!`;
-                    buzzerStatus.textContent = '⏰ الفرصة لفريقك! اضغط بسرعة!';
-                } else {
-                    buzzerBtn.disabled = true;
-                    phaseBanner.className = 'phase-banner visible phase-other-turn';
-                    phaseBanner.textContent = `⏳ الفرصة للفريق الآخر (${data.timeLimit} ثوانٍ)`;
-                    buzzerStatus.textContent = '⏳ بانتظار الفريق الآخر...';
-                }
-                startBuzzerTimer(data.timeLimit);
-            } else if (data.phase === 3) {
-                buzzerBtn.disabled = false;
-                buzzerBtn.classList.remove('buzzed');
-                buzzerBtn.innerHTML = '🔔<br>اضغط!';
-                phaseBanner.className = 'phase-banner visible phase-free';
-                phaseBanner.textContent = `⚡ أي أحد يضغط! ${data.timeLimit} ثوانٍ فقط!`;
-                buzzerStatus.textContent = '🔥 المرحلة الأخيرة! من يضغط أولاً!';
-            }
-        });
-
-        // ---- Question Closed ----
-        socket.on('question-closed', () => {
-            clearInterval(buzzerTimerInterval);
-            clearTimeout(typewriterTimeout);
-            buzzerQArea.classList.remove('visible');
-            buzzerBtn.disabled = true;
-            buzzerBtn.classList.remove('buzzed');
-            buzzerBtn.innerHTML = '🔔<br>اضغط!';
-            buzzerTimer.classList.remove('visible');
-            phaseBanner.classList.remove('visible');
-            buzzResult.textContent = '';
-            buzzerStatus.textContent = '🎮 بانتظار السؤال التالي...';
-        });
-
-        // ---- Cell Update ----
-        socket.on('cell-update', (data) => {
-            // visual feedback could be added here
-        });
-
-        // ---- Round / Match Results ----
-        socket.on('round-result', (data) => {
-            buzzerStatus.innerHTML = `🏁 انتهت الجولة! فاز: <strong>${data.winnerName}</strong>`;
-            buzzerQArea.classList.remove('visible');
-            buzzerBtn.disabled = true;
-            phaseBanner.classList.remove('visible');
-        });
-
-        socket.on('match-result', (data) => {
-            buzzerStatus.innerHTML = `🏆 انتهت المباراة! البطل: <strong>${data.winnerName}</strong>`;
-            buzzerQArea.classList.remove('visible');
-            buzzerBtn.disabled = true;
-            phaseBanner.classList.remove('visible');
-        });
-
-        // ---- Game Reset ----
-        socket.on('game-reset', () => {
-            showScreen(waitingScreen);
-            buzzerStatus.textContent = '🎮 بانتظار السؤال...';
-        });
-
-        // ---- Timer Helper ----
         function startBuzzerTimer(seconds) {
             clearInterval(buzzerTimerInterval);
             buzzerTimer.classList.add('visible');
@@ -622,10 +798,144 @@
             }, 1000);
         }
 
-        // ---- Enter key to join ----
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                window.location.reload();
+            });
+        }
+
+        function setAuthMode(mode) {
+            const loginView = document.getElementById('view-login');
+            const registerView = document.getElementById('view-register');
+            const verifyView = document.getElementById('view-verify');
+            const selector = document.getElementById('auth-mode-selector');
+            const loginBtn = document.getElementById('btn-mode-login');
+            const registerBtn = document.getElementById('btn-mode-register');
+            if (!loginView || !registerView) return;
+
+            // Reset
+            loginView.style.display = 'none';
+            registerView.style.display = 'none';
+            if (verifyView) verifyView.style.display = 'none';
+            if (selector) selector.style.display = 'flex';
+
+            if (mode === 'login') {
+                loginView.style.display = 'block';
+                loginBtn.style.background = 'var(--purple)';
+                registerBtn.style.background = 'rgba(255,255,255,0.1)';
+            } else {
+                registerView.style.display = 'block';
+                loginBtn.style.background = 'rgba(255,255,255,0.1)';
+                registerBtn.style.background = 'var(--purple)';
+            }
+        }
+
+        function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).catch((error) => {
+                document.getElementById('auth-error').textContent = translateError(error);
+            });
+        }
+
+        function translateError(error) {
+            if (!error) return "";
+            let msg = error.message || error.toString();
+            // Remove "Firebase:" branding
+            msg = msg.replace(/Firebase:\s*/g, "");
+            
+            // Custom Arabic translations
+            if (msg.includes("email-already-in-use")) return "❌ هذا البريد مسجل مسبقاً، يرجى تسجيل الدخول.";
+            if (msg.includes("invalid-email")) return "❌ عنوان البريد الإلكتروني غير صحيح.";
+            if (msg.includes("weak-password")) return "❌ كلمة المرور ضعيفة جداً (يجب أن تكون 6 خانات فأكثر).";
+            if (msg.includes("user-not-found") || msg.includes("wrong-password")) return "❌ البريد أو كلمة المرور غير صحيحة.";
+            if (msg.includes("too-many-requests")) return "⚠️ محاولات كثيرة خاطئة، يرجى الانتظار قليلاً.";
+            if (msg.includes("operation-not-allowed")) return "❌ هذه الطريقة غير مفعلة حالياً.";
+            
+            return msg;
+        }
+
+        function loginEmail() {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            const err = document.getElementById('auth-error');
+            if (!email || !pass) { err.textContent = '❌ أدخل البريد وكلمة المرور'; return; }
+            firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => {
+                err.textContent = translateError(e);
+            });
+        }
+
+        function checkVerification() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            user.reload().then(() => {
+                if (user.emailVerified) {
+                    window.location.reload();
+                } else {
+                    const err = document.getElementById('auth-error');
+                    if (err) err.textContent = '❌ لم يتم التحقق بعد، تأكد من بريدك.';
+                }
+            });
+        }
+
+        function resendVerification() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            user.sendEmailVerification().then(() => {
+                const err = document.getElementById('auth-error');
+                if (err) err.textContent = '✅ تمت إعادة إرسال الرابط بنجاح.';
+            }).catch(e => {
+                const err = document.getElementById('auth-error');
+                if (err) err.textContent = '⚠️ خطأ: ' + e.message;
+            });
+        }
+
+        function registerEmail() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+            const err = document.getElementById('auth-error');
+            if (!name || !email || !pass) { err.textContent = '❌ أدخل جميع البيانات'; return; }
+            
+            firebase.auth().createUserWithEmailAndPassword(email, pass).then((result) => {
+                result.user.sendEmailVerification().then(() => {
+                    alert("✅ تم إرسال رابط التحقق بنجاح! يرجى مراجعة بريدك الإلكتروني (In-box/Spam).");
+                }).catch(ev => {
+                    console.error("Verification error:", ev);
+                    alert("⚠️ تنبيه: تعذر إرسال رابط التفعيل حالياً. تأكد من تفعيل SMTP في الإعدادات.");
+                });
+                return result.user.updateProfile({ displayName: name });
+            }).catch(e => {
+                err.textContent = translateError(e);
+            });
+        }
+
+        function renderMiniBoard(board, letters) {
+            if (!miniBoard || !letters || letters.length === 0) return;
+            miniBoard.innerHTML = '';
+            let idx = 0;
+            for (let r = 0; r < 5; r++) {
+                const row = document.createElement('div');
+                row.className = 'mini-row' + (r % 2 === 1 ? ' offset' : '');
+                for (let c = 0; c < 5; c++) {
+                    const hex = document.createElement('div');
+                    hex.className = 'mini-hex';
+                    hex.dataset.index = idx;
+                    hex.textContent = letters[idx];
+                    if (board[idx] === 'green') hex.classList.add('claimed-green');
+                    else if (board[idx] === 'orange') hex.classList.add('claimed-orange');
+                    row.appendChild(hex);
+                    idx++;
+                }
+                miniBoard.appendChild(row);
+            }
+        }
+
         playerNameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') joinGame();
         });
+
+        const gLoginBtn = document.getElementById('google-auth-btn');
+        if (gLoginBtn) gLoginBtn.addEventListener('click', handleGoogleLogin);
     </script>
 </body>
 </html>

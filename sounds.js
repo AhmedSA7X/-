@@ -5,6 +5,9 @@
 
 const SFX = (() => {
     let audioCtx = null;
+    let sfxVolume = 1.0;
+    let musicVolume = 0.5;
+    let bgMusic = null;
 
     function getCtx() {
         if (!audioCtx) {
@@ -16,14 +19,16 @@ const SFX = (() => {
         return audioCtx;
     }
 
-    function playTone(freq, duration, type = 'sine', volume = 0.3, ramp = true) {
+    function playTone(freq, duration, type = 'sine', baseVol = 0.3, ramp = true) {
+        if (sfxVolume <= 0) return;
         try {
             const ctx = getCtx();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = type;
+            const finalVol = baseVol * sfxVolume;
             osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(volume, ctx.currentTime);
+            gain.gain.setValueAtTime(finalVol, ctx.currentTime);
             if (ramp) {
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
             }
@@ -135,6 +140,29 @@ const SFX = (() => {
         // Initialize (must be called from user gesture)
         init() {
             getCtx();
+            this.startMusic();
+        },
+
+        // 🔊 Set Volume for Sound Effects
+        setSfxVolume(val) {
+            let v = Math.max(0, Math.min(1, val));
+            sfxVolume = (v < 0.05) ? 0 : Math.pow(v, 2); // Exponential curve for deep muting
+        },
+
+        // 🎵 Set Volume for Background Music
+        setMusicVolume(val) {
+            musicVolume = Math.max(0, Math.min(1, val));
+            if (bgMusic) bgMusic.volume = musicVolume;
+        },
+
+        // 🎼 Start looping background music
+        startMusic() {
+            if (!bgMusic) {
+                bgMusic = new Audio('bg-music.mp3');
+                bgMusic.loop = true;
+                bgMusic.volume = musicVolume;
+            }
+            bgMusic.play().catch(e => { /* Ignore autoplay block warning */ });
         }
     };
 })();

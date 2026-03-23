@@ -13,8 +13,79 @@
 <body>
     <div id="app">
 
+        <!-- ============ AUTH SCREEN (MANDATORY) ============ -->
+        <div id="auth-screen" class="screen active">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 400px;">
+                <div class="logo-area">
+                    <div class="logo-hex">🔒</div>
+                    <h1 class="game-title">تسجيل الدخول</h1>
+                    <p class="game-subtitle">يرجى تسجيل الدخول للبدء</p>
+                </div>
+
+                <div id="auth-mode-selector" style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                    <button onclick="setAuthMode('login')" id="btn-mode-login" class="btn-primary" style="flex: 1; font-size: 0.9rem; padding: 10px;">تسجيل الدخول</button>
+                    <button onclick="setAuthMode('register')" id="btn-mode-register" class="btn-secondary" style="flex: 1; font-size: 0.9rem; padding: 10px; border: 1.5px solid var(--purple);">إنشاء حساب</button>
+                </div>
+
+                <div class="admin-form-card" id="auth-card" style="margin-top: 1rem;">
+                    <!-- Login View -->
+                    <div id="view-login">
+                        <div class="admin-form-field">
+                            <label class="admin-label">📧 البريد الإلكتروني</label>
+                            <input type="email" id="auth-email" placeholder="example@mail.com" class="admin-input">
+                        </div>
+                        <div class="admin-form-field">
+                            <label class="admin-label">🔑 كلمة المرور</label>
+                            <input type="password" id="auth-pass" placeholder="******" class="admin-input">
+                        </div>
+                        <button onclick="loginEmail()" class="btn-primary" style="width: 100%; margin-top: 1rem;">دخول</button>
+                    </div>
+
+                    <!-- Register View -->
+                    <div id="view-register" style="display: none;">
+                        <div class="admin-form-field">
+                            <label class="admin-label">👤 الاسم الكامل</label>
+                            <input type="text" id="reg-name" placeholder="اسمك الكريم" class="admin-input">
+                        </div>
+                        <div class="admin-form-field">
+                            <label class="admin-label">📧 البريد الإلكتروني</label>
+                            <input type="email" id="reg-email" placeholder="example@mail.com" class="admin-input">
+                        </div>
+                        <div class="admin-form-field">
+                            <label class="admin-label">🔑 كلمة المرور</label>
+                            <input type="password" id="reg-pass" placeholder="******" class="admin-input">
+                        </div>
+                        <button onclick="registerEmail()" class="btn-primary" style="width: 100%; margin-top: 1rem;">إنشاء الحساب وبدء اللعب</button>
+                    </div>
+
+                    <!-- Verification View -->
+                    <div id="view-verify" style="display: none; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📧</div>
+                        <h2 style="color: var(--gold); margin-bottom: 0.5rem;">تحقق من بريدك</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem; line-height: 1.5;">لقد أرسلنا رابط التحقق لبريدك. يرجى تفعيله ثم اضغط على الزر أدناه.</p>
+                        <button onclick="checkVerification()" class="btn-primary" style="width: 100%; margin-bottom: 10px;">تم التفعيل ✅</button>
+                        <button onclick="resendVerification()" class="btn-secondary" style="width: 100%; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1);">إعادة إرسال الرابط</button>
+                        <button onclick="logout()" class="btn-secondary" style="width: 100%; font-size: 0.8rem; margin-top: 10px; color: #ffbbbb; border: 1px solid rgba(255,0,0,0.1);">الرجوع للتسجيل</button>
+                    </div>
+
+                    <div style="text-align: center; margin: 1.5rem 0; color: var(--text-dim); position: relative;">
+                        <span style="background: var(--bg-deep); padding: 0 10px; position: relative; z-index: 2;">أو عبر</span>
+                        <hr style="position: absolute; top: 50%; left: 0; right: 0; border: 0.5px solid rgba(255,255,255,0.1); margin: 0;">
+                    </div>
+
+                    <button id="google-auth-btn" class="btn-secondary" style="background: white; color: #444; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border-radius: 12px; font-weight: bold; border: none; padding: 12px; cursor: pointer;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+                        متابعة بواسطة جوجل
+                    </button>
+                    
+                    <div id="auth-error" style="color: #ff4444; font-size: 0.85rem; margin-top: 1rem; text-align: center; min-height: 1.2rem;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ============ SETUP SCREEN ============ -->
-        <div id="setup-screen" class="screen active">
+        <div id="setup-screen" class="screen">
             <div class="setup-bg" aria-hidden="true"></div>
             <div class="setup-content">
                 <div class="logo-area">
@@ -23,24 +94,16 @@
                     <p class="game-subtitle">تحدي الفريقين</p>
                 </div>
 
-                <div class="menu-buttons" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-                    <button class="btn-primary" onclick="showScreen(document.getElementById('room-screen'))">👥 غرفة اللاعبين</button>
-                    <button class="btn-primary" onclick="showScreen(document.getElementById('rules-screen'))">📜 القواعد</button>
-                    <button class="btn-primary" onclick="showScreen(document.getElementById('settings-screen'))">⚙️ الاعدادات</button>
+                <!-- USER PROFILE BAR -->
+                <div class="user-profile-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.2rem;">👤</span>
+                        <span id="display-user-name" style="font-weight: bold; color: var(--gold);">جاري التحميل...</span>
+                    </div>
+                    <button onclick="logout()" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.2); color: #ffbbbb; cursor: pointer;">تسجيل الخروج</button>
                 </div>
-                <button id="start-btn" class="btn-primary" style="background: linear-gradient(135deg, var(--green-light), var(--green-dark));">🎮 ابدأ المباراة</button>
-            </div>
-        </div>
 
-        <!-- ============ ROOM SCREEN ============ -->
-        <div id="room-screen" class="screen">
-            <div class="setup-bg" aria-hidden="true"></div>
-            <div class="setup-content" style="max-width: 500px; width: 100%;">
-                <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <h2 style="color: var(--gold); margin-bottom: 0.8rem; font-size: 1.6rem;">غرفة اللاعبين</h2>
-                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
-                </div>
-                <div class="teams-setup">
+                <div class="teams-setup" style="margin-bottom: 1rem;">
                     <div class="team-input-card green-card">
                         <div class="team-color-dot green-dot"></div>
                         <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
@@ -53,10 +116,69 @@
                         <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
                     </div>
                 </div>
-                <!-- Multiplayer Room Code -->
-                <div class="mp-section" id="mp-section" style="margin-top: 1rem;">
+
+                <!-- زر ابدأ اللعب الرئيسي -->
+                <button id="start-btn" class="btn-primary start-game-btn">🎮 ابدأ اللعب</button>
+
+                <!-- تسجيل دخول قوقل (REMOVED - now in auth-screen) -->
+
+                <!-- المحفوظات - Saved Games -->
+                <div id="saved-games-section" class="saved-games-section" style="display: none;">
+                    <div class="saved-games-card">
+                        <div class="saved-games-header">
+                            <span class="saved-icon">📂</span>
+                            <h3>المحفوظات</h3>
+                        </div>
+                        <div class="saved-game-info">
+                            <div class="saved-teams">
+                                <span class="saved-team green-saved">🟢 <span id="saved-green-name">-</span></span>
+                                <span class="saved-vs">VS</span>
+                                <span class="saved-team orange-saved">🟠 <span id="saved-orange-name">-</span></span>
+                            </div>
+                            <div class="saved-details">
+                                <span id="saved-round-info" class="saved-round-badge">الجولة الأولى</span>
+                                <span id="saved-score-info" class="saved-score-badge">0 - 0</span>
+                            </div>
+                        </div>
+                        <div class="saved-game-actions">
+                            <button class="btn-primary saved-resume-btn" onclick="resumeSavedGame()">▶️ إكمال المباراة</button>
+                            <button class="btn-secondary saved-delete-btn" onclick="deleteSavedGame()">🗑️ حذف</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قائمة الخيارات -->
+                <div class="setup-menu-grid">
+                    <button class="setup-menu-item" onclick="showScreen(document.getElementById('mp-screen'))">
+                        <span class="menu-icon">🌐</span>
+                        <span class="menu-label">غرفة اللاعبين</span>
+                    </button>
+                    <button class="setup-menu-item" onclick="showScreen(document.getElementById('rules-screen'))">
+                        <span class="menu-icon">📜</span>
+                        <span class="menu-label">القواعد</span>
+                    </button>
+                    <button class="setup-menu-item" onclick="showScreen(document.getElementById('settings-screen'))">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-label">الاعدادات</span>
+                    </button>
+                    <button class="setup-menu-item" onclick="showScreen(document.getElementById('admin-screen')); renderCustomQuestionsList();">
+                        <span class="menu-icon">📝</span>
+                        <span class="menu-label">إضافة أسئلة</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MULTIPLAYER ROOM SCREEN ============ -->
+        <div id="mp-screen" class="screen">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 500px; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2 style="color: var(--purple-light); margin-bottom: 0.8rem; font-size: 1.6rem;">🌐 غرفة اللاعبين</h2>
+                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
+                </div>
+                <div class="mp-section" id="mp-section" style="margin-bottom: 1.5rem;">
                     <div class="mp-link-box">
-                        <h3>🌐 غرفة اللاعبين</h3>
                         <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
                         <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
                             <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
@@ -107,7 +229,7 @@
                     <h2 style="color: var(--gold); margin-bottom: 0.8rem; font-size: 1.6rem;">⚙️ الاعدادات</h2>
                     <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
                 </div>
-                <div class="mp-section" style="padding: 1.5rem;">
+                <div class="mp-section" style="padding: 1.5rem; margin-bottom: 1rem;">
                     <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.8rem; font-weight: 700; text-align: center;">سرعة ظهور السؤال للمنضمين</h3>
                     <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
                         <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
@@ -118,14 +240,161 @@
                     </div>
                     <input type="hidden" id="typewriter-speed" value="20">
                 </div>
+
+                <div class="mp-section" style="padding: 1.5rem;">
+                    <h3 style="font-size: 0.95rem; color: var(--gold); margin-bottom: 1rem; font-weight: 700; text-align: center;">🎵 إعدادات الصوت</h3>
+                    
+                    <div style="margin-bottom: 1.2rem;">
+                        <label style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: bold;">
+                            <span>🔊 صوت المؤثرات</span>
+                            <span id="sfx-vol-label">100%</span>
+                        </label>
+                        <input type="range" id="sfx-vol-slider" min="0" max="1" step="0.1" value="1" style="width: 100%; cursor: pointer;" oninput="updateSfxVolume(this.value)">
+                    </div>
+
+                    <div>
+                        <label style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: bold;">
+                            <span>🎼 مستوى الموسيقى</span>
+                            <span id="music-vol-label">50%</span>
+                        </label>
+                        <input type="range" id="music-vol-slider" min="0" max="1" step="0.1" value="0.5" style="width: 100%; cursor: pointer;" oninput="updateMusicVolume(this.value)">
+                    </div>
+                </div>
+
                 <script>
                 function selectTwSpeed(el) {
                     document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
                     el.classList.add('selected');
                     document.getElementById('typewriter-speed').value = el.dataset.val;
                 }
+
+                function updateSfxVolume(val) {
+                    document.getElementById('sfx-vol-label').textContent = Math.round(val * 100) + '%';
+                    try { SFX.setSfxVolume(parseFloat(val)); } catch(e){}
+                    try { if (val > 0) SFX.click(); } catch(e){}
+                }
+                
+                function updateMusicVolume(val) {
+                    document.getElementById('music-vol-label').textContent = Math.round(val * 100) + '%';
+                    try { SFX.setMusicVolume(parseFloat(val)); } catch(e){}
+                }
                 </script>
-                <button id="start-btn" class="btn-primary">🎮 ابدأ المباراة</button>
+                <button class="btn-primary" onclick="showScreen(document.getElementById('setup-screen'))" style="margin-top: 1.5rem;">💾 حفظ الاعدادات</button>
+            </div>
+        </div>
+
+        <!-- ============ ADMIN QUESTIONS SCREEN ============ -->
+        <div id="admin-screen" class="screen">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 600px; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2 class="admin-title">📝 إضافة أسئلة مخصصة</h2>
+                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
+                </div>
+                
+                <!-- نموذج إضافة سؤال -->
+                <div class="admin-form-card">
+                    <div class="admin-form-header">
+                        <span class="admin-form-icon">✨</span>
+                        <h3>سؤال جديد</h3>
+                    </div>
+                    
+                    <div class="admin-form-row">
+                        <!-- Custom Letter Dropdown -->
+                        <div class="admin-form-field">
+                            <label class="admin-label">🔤 الحرف</label>
+                            <div class="custom-select-wrapper" id="letter-select-wrapper">
+                                <div class="custom-select-trigger" onclick="toggleCustomSelect('letter')">
+                                    <span id="selected-letter-text">ا</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div class="custom-select-options letter-options" id="letter-options-list">
+                                    <div class="custom-option selected" onclick="selectCustomOption('letter', 'ا', 'ا')">ا</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ب', 'ب')">ب</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ت', 'ت')">ت</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ج', 'ج')">ج</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ح', 'ح')">ح</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'خ', 'خ')">خ</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'د', 'د')">د</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ر', 'ر')">ر</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ز', 'ز')">ز</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'س', 'س')">س</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ش', 'ش')">ش</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ص', 'ص')">ص</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ض', 'ض')">ض</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ط', 'ط')">ط</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ع', 'ع')">ع</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'غ', 'غ')">غ</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ف', 'ف')">ف</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ق', 'ق')">ق</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ك', 'ك')">ك</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ل', 'ل')">ل</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'م', 'م')">م</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ن', 'ن')">ن</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ه', 'ه')">ه</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'و', 'و')">و</div>
+                                    <div class="custom-option" onclick="selectCustomOption('letter', 'ي', 'ي')">ي</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="admin-letter" value="ا">
+                        </div>
+                        
+                        <!-- Custom Category Dropdown -->
+                        <div class="admin-form-field">
+                            <label class="admin-label">📂 المجال</label>
+                            <div class="custom-select-wrapper" id="category-select-wrapper">
+                                <div class="custom-select-trigger" onclick="toggleCustomSelect('category')">
+                                    <span id="selected-category-text">🌐 عام</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div class="custom-select-options cat-options" id="category-options-list">
+                                    <div class="custom-option selected" onclick="selectCustomOption('category', 'عام', '🌐 عام')">🌐 عام</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'تاريخ', '🏛️ تاريخ')">🏛️ تاريخ</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'جغرافيا', '🌍 جغرافيا')">🌍 جغرافيا</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'علوم', '🔬 علوم')">🔬 علوم</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'رياضة', '⚽ رياضة')">⚽ رياضة</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'ثقافة', '📚 ثقافة')">📚 ثقافة</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'طب', '🩺 طب')">🩺 طب</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'انمي', '🎌 أنمي')">🎌 أنمي</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'كرة قدم', '⚽ كرة قدم')">⚽ كرة قدم</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'دين', '🕌 دين')">🕌 دين</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'العاب', '🎮 ألعاب')">🎮 ألعاب</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'افلام', '🎬 أفلام')">🎬 أفلام</div>
+                                    <div class="custom-option" onclick="selectCustomOption('category', 'شركات', '🏢 شركات')">🏢 شركات</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="admin-category" value="عام">
+                        </div>
+                    </div>
+
+                    <div class="admin-form-field" style="margin-bottom: 12px;">
+                        <label class="admin-label">❓ نص السؤال</label>
+                        <textarea id="admin-question-text" rows="3" placeholder="اكتب سؤالك هنا..." class="admin-textarea"></textarea>
+                    </div>
+
+                    <div class="admin-form-field" style="margin-bottom: 16px;">
+                        <label class="admin-label">✅ الإجابة الصحيحة</label>
+                        <input type="text" id="admin-answer-text" placeholder="اكتب الإجابة..." class="admin-input">
+                    </div>
+
+                    <button class="btn-primary admin-save-btn" onclick="saveAdminQuestion()">✅ إضافة وحفظ</button>
+                    <div id="admin-feedback" class="admin-feedback"></div>
+                </div>
+
+                <!-- الأسئلة المضافة -->
+                <div class="admin-list-card">
+                    <div class="admin-list-header">
+                        <span class="admin-list-icon">📋</span>
+                        <h3>الأسئلة المضافة</h3>
+                        <span id="admin-q-count" class="admin-q-count">0</span>
+                    </div>
+                    <div id="custom-questions-list" class="admin-questions-list">
+                        <div class="admin-empty-state">
+                            <span class="admin-empty-icon">📭</span>
+                            <p>لا توجد أسئلة مخصصة حتى الآن</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -140,7 +409,8 @@
                 </div>
                 <div class="center-header">
                     <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.3rem;">
-                        <button class="btn-secondary" style="margin: 0; padding: 3px 10px; font-size: 0.8rem;" onclick="location.reload()">🏠 الرئيسية</button>
+                        <button class="btn-secondary" style="margin: 0; padding: 3px 10px; font-size: 0.8rem;" onclick="returnToSetup()">🏠 الرئيسية</button>
+                        <button class="btn-primary" style="margin: 0; padding: 3px 10px; font-size: 0.8rem; background: linear-gradient(135deg, var(--gold-light), var(--gold-dark)); border: 1px solid var(--gold); color: black;" onclick="manualSaveGame()">💾 حفظ اللعبة</button>
                         <div class="round-badge" id="round-badge" style="margin: 0;">الجولة الأولى</div>
                     </div>
                     <div class="turn-indicator">
@@ -188,7 +458,7 @@
                     <div class="buzzer-info-badge" id="buzzer-info-badge">🔔 بانتظار الضغط...</div>
                 </div>
                 <div class="question-timer" id="question-timer">15</div>
-                <p class="question-text" id="question-text">السؤال هنا...</p>
+                <p class="question-text" id="question-text" style="color: var(--gold); font-weight: 800;">السؤال هنا...</p>
                 <div id="answer-reveal-area" class="answer-reveal-area">
                     <button id="show-answer-btn" class="btn-primary" style="margin-top: 1rem;">👀 اظهر الإجابة</button>
                     <div id="answer-content" class="answer-content">
@@ -249,13 +519,15 @@
                 <p id="result-text">فاز الفريق!</p>
                 <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1.5rem;">
                     <button id="restart-btn" class="btn-primary">🔄 العب مرة ثانية</button>
-                    <button class="btn-secondary" onclick="location.reload()">🏠 العودة للرئيسية</button>
+                    <button class="btn-secondary" onclick="returnToSetup()">🏠 العودة للرئيسية</button>
                 </div>
             </div>
         </div>
 
     </div>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="sounds.js"></script>
     <script src="questions.js"></script>
     <script src="script.js"></script>
