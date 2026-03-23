@@ -730,6 +730,9 @@ body {
 @media (max-width: 700px) {
     :root { --hex-size: 54px; }
     .game-title { font-size: 2.2rem; }
+    .teams-setup { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .team-input-card { padding: 1rem; }
+    .vs-badge { display: none; } /* Hide VS badge on mobile to save space if side-by-side */
     .game-subtitle { font-size: 0.85rem; letter-spacing: 2px; }
     .game-header { flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem 0.8rem; }
     .team-panel { padding: 0.3rem 0.6rem; }

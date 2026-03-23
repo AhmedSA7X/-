@@ -23,105 +23,106 @@
                     <p class="game-subtitle">تحدي الفريقين</p>
                 </div>
 
-                <div class="accordion-container">
-                    <div class="accordion-item">
-                        <button class="accordion-btn active" onclick="toggleAccordion('acc-room')">غرفة اللاعبين <span class="acc-icon">🔽</span></button>
-                        <div class="accordion-content open" id="acc-room">
-                            <div class="teams-setup">
-                                <div class="team-input-card green-card">
-                                    <div class="team-color-dot green-dot"></div>
-                                    <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
-                                    <input type="text" id="green-name-input" placeholder="اسم الفريق..." maxlength="20">
-                                </div>
-                                <div class="vs-badge">VS</div>
-                                <div class="team-input-card orange-card">
-                                    <div class="team-color-dot orange-dot"></div>
-                                    <label>الفريق البرتقالي <span class="dir-label">↕ عمودي</span></label>
-                                    <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
-                                </div>
-                            </div>
+                <div class="menu-buttons" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                    <button class="btn-primary" onclick="showScreen(document.getElementById('room-screen'))">👥 غرفة اللاعبين</button>
+                    <button class="btn-primary" onclick="showScreen(document.getElementById('rules-screen'))">📜 القواعد</button>
+                    <button class="btn-primary" onclick="showScreen(document.getElementById('settings-screen'))">⚙️ الاعدادات</button>
+                </div>
+                <button id="start-btn" class="btn-primary" style="background: linear-gradient(135deg, var(--green-light), var(--green-dark));">🎮 ابدأ المباراة</button>
+            </div>
+        </div>
 
-                            <!-- Multiplayer Room Code -->
-                            <div class="mp-section" id="mp-section" style="margin-top: 1rem;">
-                                <div class="mp-link-box">
-                                    <h3>🌐 غرفة اللاعبين</h3>
-                                    <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
-                                    <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
-                                        <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
-                                        <button class="btn-secondary" id="btn-join-page" onclick="window.location.href='join.html'" style="width: auto; padding: 10px 20px; margin: 0; background: rgba(255,255,255,0.15); border: none; border-radius: 12px; color: white; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold;">🔗 الانضمام الى الغرفة</button>
-                                    </div>
-                                    <button class="btn-copy" id="btn-copy-link" onclick="copyJoinLink()" style="display: none; margin-top: 5px;">📋 نسخ الرابط (إختياري)</button>
-                                    <p class="mp-count" id="mp-count" style="margin-top: 10px;">اللاعبين: 0/8</p>
-                                </div>
-                                <div class="mp-players-area">
-                                    <div class="mp-team-col">
-                                        <h4 style="color: var(--green-light);">🟢 الأخضر</h4>
-                                        <div id="mp-green-players" class="mp-player-list"></div>
-                                    </div>
-                                    <div class="mp-team-col">
-                                        <h4 style="color: var(--orange-light);">🟠 البرتقالي</h4>
-                                        <div id="mp-orange-players" class="mp-player-list"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <!-- ============ ROOM SCREEN ============ -->
+        <div id="room-screen" class="screen">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 500px; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2 style="color: var(--gold); margin-bottom: 0.8rem; font-size: 1.6rem;">غرفة اللاعبين</h2>
+                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
+                </div>
+                <div class="teams-setup">
+                    <div class="team-input-card green-card">
+                        <div class="team-color-dot green-dot"></div>
+                        <label>الفريق الأخضر <span class="dir-label">↔ أفقي</span></label>
+                        <input type="text" id="green-name-input" placeholder="اسم الفريق..." maxlength="20">
                     </div>
-
-                    <div class="accordion-item">
-                        <button class="accordion-btn" onclick="toggleAccordion('acc-rules')">القواعد <span class="acc-icon">🔽</span></button>
-                        <div class="accordion-content" id="acc-rules">
-                            <div class="rules-box" style="margin-top: 1rem; text-align: right;">
-                                <h2>📜 القواعد</h2>
-                                <ul>
-                                    <li>🟢 الأخضر يصل <strong>يمين ← يسار</strong></li>
-                                    <li>🟠 البرتقالي يصل <strong>أعلى ← أسفل</strong></li>
-                                    <li>❓ أجب صح لتحتل الخلية بلونك</li>
-                                    <li>🏆 أول فريق يوصل الطرفين يفوز!</li>
-                                    <li>📞 لكل فريق <strong>فزعة</strong> واحدة</li>
-                                </ul>
-                            </div>
-                        </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="team-input-card orange-card">
+                        <div class="team-color-dot orange-dot"></div>
+                        <label>الفريق البرتقالي <span class="dir-label">↕ عمودي</span></label>
+                        <input type="text" id="orange-name-input" placeholder="اسم الفريق..." maxlength="20">
                     </div>
-
-                    <div class="accordion-item">
-                        <button class="accordion-btn" onclick="toggleAccordion('acc-settings')">الاعدادات <span class="acc-icon">🔽</span></button>
-                        <div class="accordion-content" id="acc-settings">
-                            <!-- Typewriter Speed Settings -->
-                            <div class="mp-section" style="margin-top: 1rem; padding: 1rem;">
-                                <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.6rem; font-weight: 700;">⚙️ سرعة ظهور السؤال للمنضمين</h3>
-                                <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center;">
-                                    <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
-                                    <span class="tw-speed-chip selected" data-val="20" onclick="selectTwSpeed(this)">🏃 سريع</span>
-                                    <span class="tw-speed-chip" data-val="50" onclick="selectTwSpeed(this)">🚶 متوسط</span>
-                                    <span class="tw-speed-chip" data-val="100" onclick="selectTwSpeed(this)">🐢 بطيء</span>
-                                    <span class="tw-speed-chip" data-val="0" onclick="selectTwSpeed(this)">💨 مباشر</span>
-                                </div>
-                                <input type="hidden" id="typewriter-speed" value="20">
-                            </div>
-                            <script>
-                            function selectTwSpeed(el) {
-                                document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
-                                el.classList.add('selected');
-                                document.getElementById('typewriter-speed').value = el.dataset.val;
-                            }
-                            </script>
+                </div>
+                <!-- Multiplayer Room Code -->
+                <div class="mp-section" id="mp-section" style="margin-top: 1rem;">
+                    <div class="mp-link-box">
+                        <h3>🌐 غرفة اللاعبين</h3>
+                        <div id="room-code-display" class="mp-link" style="font-size: 2.5rem; letter-spacing: 5px; cursor: pointer; display: none;">-----</div>
+                        <div id="room-actions-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
+                            <button class="btn-primary" id="btn-create-room" onclick="createRoom()" style="width: auto; padding: 10px 20px; margin: 0;">➕ إنشاء غرفة</button>
+                            <button class="btn-secondary" id="btn-join-page" onclick="window.location.href='join.html'" style="width: auto; padding: 10px 20px; margin: 0; background: rgba(255,255,255,0.15); border: none; border-radius: 12px; color: white; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold;">🔗 الانضمام الى الغرفة</button>
+                        </div>
+                        <button class="btn-copy" id="btn-copy-link" onclick="copyJoinLink()" style="display: none; margin-top: 5px;">📋 نسخ الرابط (إختياري)</button>
+                        <p class="mp-count" id="mp-count" style="margin-top: 10px;">اللاعبين: 0/8</p>
+                    </div>
+                    <div class="mp-players-area">
+                        <div class="mp-team-col">
+                            <h4 style="color: var(--green-light);">🟢 الأخضر</h4>
+                            <div id="mp-green-players" class="mp-player-list"></div>
+                        </div>
+                        <div class="mp-team-col">
+                            <h4 style="color: var(--orange-light);">🟠 البرتقالي</h4>
+                            <div id="mp-orange-players" class="mp-player-list"></div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- ============ RULES SCREEN ============ -->
+        <div id="rules-screen" class="screen">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 500px; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2 style="color: var(--gold); margin-bottom: 0.8rem; font-size: 1.6rem;">📜 القواعد</h2>
+                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
+                </div>
+                <div class="rules-box" style="text-align: right;">
+                    <ul>
+                        <li>🟢 الأخضر يصل <strong>يمين ← يسار</strong></li>
+                        <li>🟠 البرتقالي يصل <strong>أعلى ← أسفل</strong></li>
+                        <li>❓ أجب صح لتحتل الخلية بلونك</li>
+                        <li>🏆 أول فريق يوصل الطرفين يفوز!</li>
+                        <li>📞 لكل فريق <strong>فزعة</strong> واحدة</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ SETTINGS SCREEN ============ -->
+        <div id="settings-screen" class="screen">
+            <div class="setup-bg" aria-hidden="true"></div>
+            <div class="setup-content" style="max-width: 500px; width: 100%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2 style="color: var(--gold); margin-bottom: 0.8rem; font-size: 1.6rem;">⚙️ الاعدادات</h2>
+                    <button class="btn-secondary" onclick="showScreen(document.getElementById('setup-screen'))" style="padding: 8px 30px; border-radius: 12px; margin: 0 auto; display: inline-block;">🔙 رجوع للخلف</button>
+                </div>
+                <div class="mp-section" style="padding: 1.5rem;">
+                    <h3 style="font-size: 0.95rem; color: var(--purple-light); margin-bottom: 0.8rem; font-weight: 700; text-align: center;">سرعة ظهور السؤال للمنضمين</h3>
+                    <div id="tw-speed-chips" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+                        <span class="tw-speed-chip" data-val="5" onclick="selectTwSpeed(this)">⚡ سريع جداً</span>
+                        <span class="tw-speed-chip selected" data-val="20" onclick="selectTwSpeed(this)">🏃 سريع</span>
+                        <span class="tw-speed-chip" data-val="50" onclick="selectTwSpeed(this)">🚶 متوسط</span>
+                        <span class="tw-speed-chip" data-val="100" onclick="selectTwSpeed(this)">🐢 بطيء</span>
+                        <span class="tw-speed-chip" data-val="0" onclick="selectTwSpeed(this)">💨 مباشر</span>
+                    </div>
+                    <input type="hidden" id="typewriter-speed" value="20">
+                </div>
                 <script>
-                function toggleAccordion(id) {
-                    const el = document.getElementById(id);
-                    const btn = el.previousElementSibling;
-                    const isOpen = el.classList.contains('open');
-                    
-                    document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
-                    document.querySelectorAll('.accordion-btn').forEach(b => b.classList.remove('active'));
-                    
-                    if (!isOpen) {
-                        el.classList.add('open');
-                        btn.classList.add('active');
-                    }
+                function selectTwSpeed(el) {
+                    document.querySelectorAll('#tw-speed-chips .tw-speed-chip').forEach(c => c.classList.remove('selected'));
+                    el.classList.add('selected');
+                    document.getElementById('typewriter-speed').value = el.dataset.val;
                 }
                 </script>
                 <button id="start-btn" class="btn-primary">🎮 ابدأ المباراة</button>
